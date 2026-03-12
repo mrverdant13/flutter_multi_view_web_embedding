@@ -1,0 +1,7 @@
+name: flutter_multi_view_web_embedding
+
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+
+dev_dependencies:
+  melos: ^6.3.2

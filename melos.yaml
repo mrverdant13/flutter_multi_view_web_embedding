@@ -1,0 +1,29 @@
+name: flutter_multi_view_web_embedding
+
+packages:
+  - packages/**
+
+sdkPath: .fvm/flutter_sdk
+
+command:
+  bootstrap:
+    environment:
+      sdk: ">=3.6.0 <4.0.0"
+      flutter: ">=3.6.0 <4.0.0"
+    dev_dependencies:
+      very_good_analysis: ^7.0.0
+  clean:
+    hooks:
+      pre:
+        run: melos run .clean
+
+scripts:
+  # Internal: deep clean via git
+  .clean:
+    private: true
+    description: Deep clean-up
+    run: >
+      git clean
+      -dfX
+      MELOS_PACKAGE_PATH
+    packageFilters: {}
