@@ -1,0 +1,17 @@
+# FVM — ignore generated symlinks/caches, but keep fvm_config.json
+
+# Dart / Flutter
+.dart_tool/
+.packages
+build/
+pubspec.lock
+
+# IDE
+.idea/
+.vscode/settings.json
+
+# macOS
+.DS_Store
+
+# FVM Version Cache
+.fvm/
