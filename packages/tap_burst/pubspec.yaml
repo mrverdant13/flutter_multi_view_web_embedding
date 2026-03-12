@@ -1,0 +1,23 @@
+name: tap_burst
+description: >-
+  An interactive Flutter widget that renders animated particle bursts at tap
+  positions.
+publish_to: none
+version: 0.1.0+1
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  very_good_analysis: ^7.0.0
+
+flutter:
+  uses-material-design: false
