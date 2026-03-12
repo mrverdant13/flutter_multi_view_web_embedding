@@ -2,6 +2,7 @@ name: flutter_multi_view_web_embedding
 
 packages:
   - packages/**
+  - apps/**
 
 sdkPath: .fvm/flutter_sdk
 
