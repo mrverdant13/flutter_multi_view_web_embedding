@@ -2,7 +2,6 @@ name: multi_view_app
 description: A reusable Flutter package providing the MultiViewApp widget for multi-view web embedding.
 publish_to: none
 version: 0.1.0+1
-resolution: workspace
 
 environment:
   sdk: ">=3.6.0 <4.0.0"
