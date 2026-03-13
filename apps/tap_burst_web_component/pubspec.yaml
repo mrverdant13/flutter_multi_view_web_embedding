@@ -1,0 +1,23 @@
+name: tap_burst_web_component
+description: Web component app for the tap_burst package.
+publish_to: none
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  multi_view_app:
+    path: ../../packages/multi_view_app
+  tap_burst:
+    path: ../../packages/tap_burst
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  very_good_analysis: ^7.0.0
+
+flutter:
+  uses-material-design: false
