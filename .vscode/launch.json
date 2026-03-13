@@ -1,0 +1,36 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "flutter_bootstrap (Flutter)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "cwd": "${workspaceFolder}/packages/flutter_bootstrap",
+      "deviceId": "chrome",
+    },
+    {
+      "name": "color_mixer_web_component (Flutter)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "cwd": "${workspaceFolder}/apps/color_mixer_web_component",
+      "deviceId": "chrome",
+    },
+    {
+      "name": "tap_burst_web_component (Flutter)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "cwd": "${workspaceFolder}/apps/tap_burst_web_component",
+      "deviceId": "chrome",
+    },
+    {
+      "name": "widgets_preview (Node)",
+      "request": "launch",
+      "type": "node-terminal",
+      "command": "npm run start",
+      "cwd": "${workspaceFolder}/apps/widgets_preview",
+    },
+  ],
+}

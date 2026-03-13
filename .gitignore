@@ -8,7 +8,6 @@ pubspec.lock
 
 # IDE
 .idea/
-.vscode/settings.json
 
 # macOS
 .DS_Store
