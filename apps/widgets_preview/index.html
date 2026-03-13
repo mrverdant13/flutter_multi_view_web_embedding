@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flutter Web Embedding</title>
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+  <header class="header">
+    <h1>Flutter Web Embedding</h1>
+    <p>Interactive Flutter widgets embedded in a vanilla web page via the multi-view API</p>
+  </header>
+
+  <main class="grid">
+    <article class="card">
+      <div class="card-header">
+        <span class="card-tag">tap_burst</span>
+        <h2>Tap Burst</h2>
+        <p>Tap anywhere inside the widget to create animated particle bursts</p>
+      </div>
+      <div id="tap-burst-host" class="flutter-host" data-widget="tap_burst"></div>
+    </article>
+
+    <article class="card">
+      <div class="card-header">
+        <span class="card-tag">color_mixer</span>
+        <h2>Color Mixer</h2>
+        <p>Drag the RGB sliders to blend your own color in real time</p>
+      </div>
+      <div id="color-mixer-host" class="flutter-host" data-widget="color_mixer"></div>
+    </article>
+  </main>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

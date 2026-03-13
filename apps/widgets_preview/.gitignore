@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.DS_Store
+.vscode/
+.vite/
+
+# Generated Flutter build output — run `npm prestart` or `npm prebuild` to populate
+public/color-mixer/
+public/flutter-bootstrap/
+public/tap-burst/
