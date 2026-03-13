@@ -28,3 +28,21 @@ scripts:
       -dfX
       MELOS_PACKAGE_PATH
     packageFilters: {}
+
+  format:
+    description: Format codebase
+    run: >
+      dart format .
+  format.ci:
+    description: Format codebase and check for formatting errors
+    run: >
+      dart format --set-exit-if-changed .
+
+  analyze:
+    description: Analyze codebase
+    run: >
+      dart analyze .
+  analyze.ci:
+    description: Analyze codebase and check for analysis errors
+    run: >
+      dart analyze --fatal-infos --fatal-warnings .
