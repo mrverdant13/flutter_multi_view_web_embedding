@@ -1,29 +1,64 @@
-/** Internal Flutter app type. */
-export interface FlutterApp {
-  addView(options: { hostElement: HTMLElement }): Promise<number>;
-  removeView(viewId: number): Promise<unknown>;
+/** Options passed to {@link FlutterApp.addView}. */
+type AddViewOptions = {
+  /** The DOM element that will host the new Flutter view. */
+  hostElement: HTMLElement;
 }
 
-interface FlutterAppRunner {
-  runApp(): Promise<FlutterApp>;
+/** A running Flutter application that supports multiple views. */
+type FlutterApp = {
+  /** Adds a new Flutter view inside the given host element. Resolves with the assigned view ID. */
+  addView: (options: AddViewOptions) => Promise<number>;
+  /** Removes the Flutter view with the given ID. */
+  removeView: (viewId: number) => Promise<unknown>;
 }
 
-/** Internal Flutter engine initializer type. */
-interface FlutterEngineInitializer {
-  initializeEngine(options: {
-    assetBase: string;
-    multiViewEnabled: boolean;
-  }): Promise<FlutterAppRunner>;
+/** Returned by {@link FlutterEngineInitializer.initializeEngine}; used to start the app. */
+type FlutterAppRunner = {
+  /** Starts the Flutter application. Resolves with the running {@link FlutterApp}. */
+  runApp: () => Promise<FlutterApp>;
 }
 
-interface FlutterLoader {
-  load(options: {
-    config: { entryPointBaseUrl: string };
-    onEntrypointLoaded: (initializer: FlutterEngineInitializer) => Promise<void>;
-  }): void;
+/** Options passed to {@link FlutterEngineInitializer.initializeEngine}. */
+type EngineInitializerOptions = {
+  /** Base URL from which the engine will resolve Flutter assets. */
+  assetBase: string;
+  /** When `true`, the engine starts in multi-view mode instead of single-view mode. */
+  multiViewEnabled: boolean;
 }
 
-interface FlutterNamespace {
+/** Provided by the Flutter engine bootstrap; initializes the engine before the app runs. */
+type FlutterEngineInitializer = {
+  /** Initializes the Flutter engine with the given options. Resolves with a {@link FlutterAppRunner}. */
+  initializeEngine: (options: EngineInitializerOptions) => Promise<FlutterAppRunner>;
+}
+
+/** Configuration object supplied to {@link FlutterLoader.load}. */
+type EntryPointConfig = {
+  /** Base URL of the Flutter app's entry point (e.g. the directory containing `main.dart.js`). */
+  entryPointBaseUrl: string;
+}
+
+/** Options passed to {@link FlutterLoader.load}. */
+type EntryPointLoaderCallbackOptions = {
+  /** Static configuration for the entry point. */
+  config: EntryPointConfig;
+  /**
+   * Callback invoked once the Flutter entry point script has been fetched and
+   * evaluated. Receives the {@link FlutterEngineInitializer} that drives the
+   * rest of the startup sequence.
+   */
+  onEntrypointLoaded: (engineInitializer: FlutterEngineInitializer) => Promise<void>;
+}
+
+/** The Flutter loader injected by `flutter_bootstrap.js`. */
+type FlutterLoader = {
+  /** Fetches and evaluates the Flutter app entry point, then invokes the provided callback. */
+  load: (options: EntryPointLoaderCallbackOptions) => Promise<void>;
+}
+
+/** Shape of the `_flutter` global namespace injected by `flutter_bootstrap.js`. */
+type FlutterNamespace = {
+  /** The loader used to bootstrap a Flutter application. */
   loader: FlutterLoader;
 }
 
