@@ -24,4 +24,4 @@ Include `flutter_bootstrap.js` via an `async` script tag **before** any widget-s
 <script src="/flutter-bootstrap/flutter_bootstrap.js" async></script>
 ```
 
-Refer to the [root README](../../README.md) for the full initialization pipeline.
+Refer to the [embedding guide](../../docs/embedding.md) for the full initialization pipeline.
