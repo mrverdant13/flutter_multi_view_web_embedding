@@ -5,6 +5,8 @@ import 'package:flutter/widgets.dart';
 const _kParticleCount = 10;
 const _kBurstDuration = Duration(milliseconds: 800);
 const _kBackground = Color(0xFF0D0D1A);
+const _kGridColor = Color(0xFF1E1E30);
+const _kGridSize = 40.0;
 const _kPalette = <Color>[
   Color(0xFFFF6B6B),
   Color(0xFFFFD93D),
@@ -116,6 +118,7 @@ class _TapBurstState extends State<TapBurst> with TickerProviderStateMixin {
           color: _kBackground,
           child: ClipRect(
             child: CustomPaint(
+              painter: const _GridPainter(),
               foregroundPainter: _BurstPainter(
                 bursts: List.unmodifiable(_bursts),
               ),
@@ -125,6 +128,26 @@ class _TapBurstState extends State<TapBurst> with TickerProviderStateMixin {
       ),
     );
   }
+}
+
+class _GridPainter extends CustomPainter {
+  const _GridPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = _kGridColor
+      ..strokeWidth = 1;
+    for (double x = 0; x <= size.width; x += _kGridSize) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    }
+    for (double y = 0; y <= size.height; y += _kGridSize) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _GridPainter oldDelegate) => false;
 }
 
 class _BurstPainter extends CustomPainter {
