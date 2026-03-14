@@ -32,4 +32,4 @@ _flutter.loader.load({
 });
 ```
 
-Refer to the [root README](../../README.md) for the full embedding pipeline, including race condition prevention when loading multiple Flutter apps on the same page.
+Refer to the [embedding guide](../../docs/embedding.md) for the full embedding pipeline, including race condition prevention when loading multiple Flutter apps on the same page.
