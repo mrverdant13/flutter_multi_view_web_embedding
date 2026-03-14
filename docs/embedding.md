@@ -268,6 +268,7 @@ Key points:
 - `initializeEngine()` and `runApp()` are the expensive steps. Defer them if the widget is not immediately visible.
 - Once `runApp()` has been called, subsequent `addView` / `removeView` calls are lightweight.
 - Each unique entry point can only be initialized once per page. Concurrent callers share one in-flight promise. When embedding multiple independent Flutter apps, use the serial queue pattern described in [Race conditions](#race-conditions).
+- Lazy loading can be verified in Chromium DevTools: open the **Sources** tab before the deferral condition is met and confirm that the Flutter entry point assets (`main.dart.js`, WASM, etc.) are absent. They appear only after `_flutter.loader.load()` is called.
 
 ---
 
