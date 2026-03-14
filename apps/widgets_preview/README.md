@@ -37,7 +37,7 @@ Output is written to `dist/`.
 | `public/tap-burst/` | Built `tap_burst_web_component` assets |
 | `public/color-mixer/` | Built `color_mixer_web_component` assets |
 
-`src/main.ts` loads `flutter_bootstrap.js` once, then mounts both widgets in parallel using the serial-queue helper in `src/custom_bootstrap.ts`. See the [root README](../../README.md) for a detailed explanation of the embedding pipeline and the race-condition prevention pattern.
+`src/main.ts` loads `flutter_bootstrap.js` once, then mounts both widgets in parallel using the serial-queue helper in `src/custom_bootstrap.ts`. See the [embedding guide](../../docs/embedding.md) for a detailed explanation of the embedding pipeline and the race-condition prevention pattern.
 
 ## Project structure
 
