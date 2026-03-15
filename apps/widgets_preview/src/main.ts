@@ -22,6 +22,21 @@ interface TapBurstApi {
 }
 
 
+/** Reads Color Mixer initial config from the config panel inputs. */
+function getColorMixerInitialData(): { r: number; g: number; b: number } {
+  const r = parseFloat((document.getElementById('color-mixer-config-r') as HTMLInputElement)?.value ?? '0');
+  const g = parseFloat((document.getElementById('color-mixer-config-g') as HTMLInputElement)?.value ?? '0');
+  const b = parseFloat((document.getElementById('color-mixer-config-b') as HTMLInputElement)?.value ?? '0');
+  return { r, g, b };
+}
+
+/** Reads Tap Burst initial config from the config panel inputs. */
+function getTapBurstInitialData(): { particleCount: number; burstDurationMs: number } {
+  const particleCount = parseInt((document.getElementById('tap-burst-config-particle-count') as HTMLInputElement)?.value ?? '10', 10);
+  const burstDurationMs = parseInt((document.getElementById('tap-burst-config-burst-duration') as HTMLInputElement)?.value ?? '800', 10);
+  return { particleCount, burstDurationMs };
+}
+
 /** Tracks active view entries per app, keyed on basePath. */
 const viewRegistry = new Map<string, ViewEntry[]>();
 
@@ -204,10 +219,11 @@ async function addView(
   viewsContainer: HTMLElement,
   widgetName: string,
   addBtn: HTMLButtonElement,
-  initialData: unknown,
+  getInitialData: () => unknown,
   onStateReady?: (api: unknown, wrapper: HTMLElement, initialData: unknown) => void,
 ): Promise<FlutterApp> {
   const app = await getFlutterApp(basePath, basePath);
+  const initialData = getInitialData();
   const viewNumber = (viewRegistry.get(basePath)?.length ?? 0) + 1;
 
   const wrapper = document.createElement('div');
@@ -283,7 +299,7 @@ async function main(): Promise<void> {
       widgetName: 'tap_burst',
       viewsId: 'tap-burst-views',
       addId: 'tap-burst-add',
-      initialData: { particleCount: 10, burstDurationMs: 800 },
+      getInitialData: getTapBurstInitialData,
       onStateReady: (api: unknown, wrapper: HTMLElement, initialData: unknown) => {
         const typedApi = api as TapBurstApi;
         const initData = initialData as { particleCount: number; burstDurationMs: number };
@@ -296,7 +312,7 @@ async function main(): Promise<void> {
       widgetName: 'color_mixer',
       viewsId: 'color-mixer-views',
       addId: 'color-mixer-add',
-      initialData: { r: 0, g: 0, b: 0 },
+      getInitialData: getColorMixerInitialData,
       onStateReady: (api: unknown, wrapper: HTMLElement, initialData: unknown) => {
         const typedApi = api as ColorMixerApi;
         const initData = initialData as { r: number; g: number; b: number };
@@ -307,7 +323,7 @@ async function main(): Promise<void> {
   ];
 
   await Promise.all(
-    widgets.map(async ({ basePath, widgetName, viewsId, addId, initialData, onStateReady }) => {
+    widgets.map(async ({ basePath, widgetName, viewsId, addId, getInitialData, onStateReady }) => {
       const viewsContainer = document.getElementById(viewsId) as HTMLElement;
       const addBtn = document.getElementById(addId) as HTMLButtonElement;
 
@@ -318,7 +334,7 @@ async function main(): Promise<void> {
             addBtn.disabled = false;
             onStateReady(api, wrapper, data);
           };
-          await addView(basePath, viewsContainer, widgetName, addBtn, initialData, onStateReadyAndReenableBtn);
+          await addView(basePath, viewsContainer, widgetName, addBtn, getInitialData, onStateReadyAndReenableBtn);
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
           console.error(`[widgets-preview] addView ${basePath}:`, msg);
