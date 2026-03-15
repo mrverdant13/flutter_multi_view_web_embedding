@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "prestart": "node scripts/build-flutter.mjs",
-    "start": "vite",
+    "predev": "node scripts/build-flutter.mjs",
+    "dev": "vite",
     "prebuild": "node scripts/build-flutter.mjs",
     "build": "vite build",
     "preview": "vite preview"
