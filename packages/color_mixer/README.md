@@ -14,6 +14,14 @@ ColorMixer({Key? key, ColorMixerController? controller})
 
 The widget is stateful. When no `controller` is provided it creates and manages its own internal `ColorMixerController`. Pass an external controller to observe or drive the color from outside the widget tree.
 
+### ColorMixerController
+
+| Member | Type | Default | Notes |
+|---|---|---|---|
+| `color` | `Color` (getter/setter) | `Color(0xFF000000)` | Alpha is always forced to 1.0. |
+
+`ColorMixerController` extends `ValueNotifier<Color>`. Add a listener to be notified whenever the color changes.
+
 ## Usage
 
 `ColorMixer` is a standard Flutter widget and can be placed anywhere in a widget tree.
