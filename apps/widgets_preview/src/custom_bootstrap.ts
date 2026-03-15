@@ -2,6 +2,8 @@
 type AddViewOptions = {
   /** The DOM element that will host the new Flutter view. */
   hostElement: HTMLElement;
+  /** Arbitrary data passed to the Flutter view on startup. */
+  initialData?: unknown;
 }
 
 /** A running Flutter application that supports multiple views. */

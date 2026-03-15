@@ -3,6 +3,25 @@ import { getFlutterApp } from './custom_bootstrap';
 type FlutterApp = Awaited<ReturnType<typeof getFlutterApp>>;
 type ViewEntry = { viewId: number; hostElement: HTMLElement; wrapper: HTMLElement };
 
+interface ColorMixerApi {
+  /** Set color values (0.0–1.0). */
+  setColor(r: number, g: number, b: number): void;
+  /** Callback invoked on every color change (assign to register). */
+  onColorChanged: ((r: number, g: number, b: number) => void) | null;
+}
+
+interface TapBurstApi {
+  /** Change particle count per burst (1–200). */
+  particleCount: number;
+  /** Change burst animation duration in ms (100–5000). */
+  burstDuration: number;
+  /** Callback invoked when particle count changes (assign to register). */
+  onParticleCountChanged: ((n: number) => void) | null;
+  /** Callback invoked when burst duration changes (assign to register). */
+  onBurstDurationChanged: ((ms: number) => void) | null;
+}
+
+
 /** Tracks active view entries per app, keyed on basePath. */
 const viewRegistry = new Map<string, ViewEntry[]>();
 
@@ -41,6 +60,141 @@ function showError(container: HTMLElement, message: string): void {
   container.textContent = message;
 }
 
+/** Builds and appends a Color Mixer output display to the view wrapper, wired to the given API. */
+function buildColorMixerOutputDisplay(wrapper: HTMLElement, api: ColorMixerApi): void {
+  const display = document.createElement('div');
+  display.className = 'output-display';
+
+  const colorText = document.createElement('span');
+  colorText.className = 'output-value';
+  colorText.textContent = '—';
+  display.appendChild(colorText);
+
+  api.onColorChanged = (r, g, b) => {
+    const toHex = (v: number) => Math.round(v * 255).toString(16).padStart(2, '0');
+    const hex = `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+    colorText.textContent = hex;
+    colorText.style.color = hex;
+  };
+
+  wrapper.appendChild(display);
+}
+
+/** Builds and appends a Color Mixer control panel to the view wrapper, wired to the given API. */
+function buildColorMixerControlPanel(wrapper: HTMLElement, api: ColorMixerApi, init: { r: number; g: number; b: number }): void {
+  const panel = document.createElement('div');
+  panel.className = 'control-panel';
+
+  const sliders: HTMLInputElement[] = [];
+  for (const [label, initVal] of [['R', init.r], ['G', init.g], ['B', init.b]] as [string, number][]) {
+    const row = document.createElement('label');
+    row.className = 'control-row';
+    const span = document.createElement('span');
+    span.textContent = label;
+    const input = document.createElement('input');
+    input.type = 'range';
+    input.min = '0';
+    input.max = '1';
+    input.step = '0.01';
+    input.value = String(initVal);
+    sliders.push(input);
+    row.appendChild(span);
+    row.appendChild(input);
+    panel.appendChild(row);
+  }
+
+  const fire = () => api.setColor(
+    parseFloat(sliders[0].value),
+    parseFloat(sliders[1].value),
+    parseFloat(sliders[2].value),
+  );
+  sliders.forEach((s) => s.addEventListener('input', fire));
+
+  const prevOnColorChanged = api.onColorChanged;
+  api.onColorChanged = (r, g, b) => {
+    prevOnColorChanged?.(r, g, b);
+    sliders[0].value = String(r);
+    sliders[1].value = String(g);
+    sliders[2].value = String(b);
+  };
+
+  wrapper.appendChild(panel);
+}
+
+/** Builds and appends a Tap Burst output display to the view wrapper, wired to the given API. */
+function buildTapBurstOutputDisplay(wrapper: HTMLElement, api: TapBurstApi): void {
+  const display = document.createElement('div');
+  display.className = 'output-display';
+
+  const countText = document.createElement('span');
+  countText.className = 'output-value';
+  countText.textContent = '—';
+
+  const durText = document.createElement('span');
+  durText.className = 'output-value';
+  durText.textContent = '—';
+
+  display.appendChild(countText);
+  display.appendChild(durText);
+
+  api.onParticleCountChanged = (n) => {
+    countText.textContent = `${n} particles`;
+  };
+  api.onBurstDurationChanged = (ms) => {
+    durText.textContent = `${ms} ms`;
+  };
+
+  wrapper.appendChild(display);
+}
+
+/** Builds and appends a Tap Burst control panel to the view wrapper, wired to the given API. */
+function buildTapBurstControlPanel(wrapper: HTMLElement, api: TapBurstApi, init: { particleCount: number; burstDurationMs: number }): void {
+  const panel = document.createElement('div');
+  panel.className = 'control-panel';
+
+  const countRow = document.createElement('label');
+  countRow.className = 'control-row';
+  const countLabel = document.createElement('span');
+  countLabel.textContent = 'Particles';
+  const countInput = document.createElement('input');
+  countInput.type = 'number';
+  countInput.min = '1';
+  countInput.max = '200';
+  countInput.value = String(init.particleCount);
+  countInput.addEventListener('input', () => { api.particleCount = parseInt(countInput.value, 10); });
+  countRow.appendChild(countLabel);
+  countRow.appendChild(countInput);
+  panel.appendChild(countRow);
+
+  const durRow = document.createElement('label');
+  durRow.className = 'control-row';
+  const durLabel = document.createElement('span');
+  durLabel.textContent = 'Duration (ms)';
+  const durInput = document.createElement('input');
+  durInput.type = 'number';
+  durInput.min = '100';
+  durInput.max = '5000';
+  durInput.value = String(init.burstDurationMs);
+  durInput.addEventListener('input', () => { api.burstDuration = parseInt(durInput.value, 10); });
+  durRow.appendChild(durLabel);
+  durRow.appendChild(durInput);
+  panel.appendChild(durRow);
+
+  const prevOnParticleCountChanged = api.onParticleCountChanged;
+  api.onParticleCountChanged = (n) => {
+    prevOnParticleCountChanged?.(n);
+    countInput.value = String(n);
+  };
+
+  const prevOnBurstDurationChanged = api.onBurstDurationChanged;
+  api.onBurstDurationChanged = (ms) => {
+    prevOnBurstDurationChanged?.(ms);
+    durInput.value = String(ms);
+  };
+
+  wrapper.appendChild(panel);
+}
+
 /**
  * Creates a new Flutter view and appends it to the views container.
  * Each wrapper includes a per-view remove button.
@@ -50,6 +204,8 @@ async function addView(
   viewsContainer: HTMLElement,
   widgetName: string,
   addBtn: HTMLButtonElement,
+  initialData: unknown,
+  onStateReady?: (api: unknown, wrapper: HTMLElement, initialData: unknown) => void,
 ): Promise<FlutterApp> {
   const app = await getFlutterApp(basePath, basePath);
   const viewNumber = (viewRegistry.get(basePath)?.length ?? 0) + 1;
@@ -74,7 +230,15 @@ async function addView(
   wrapper.appendChild(host);
   viewsContainer.appendChild(wrapper);
 
-  const viewId = await app.addView({ hostElement: host });
+  if (onStateReady) {
+    host.addEventListener(
+      'flutter::state_ready',
+      (e) => onStateReady((e as CustomEvent).detail, wrapper, initialData),
+      { once: true },
+    );
+  }
+
+  const viewId = await app.addView({ hostElement: host, initialData });
 
   if (!viewRegistry.has(basePath)) viewRegistry.set(basePath, []);
   const entry: ViewEntry = { viewId, hostElement: host, wrapper };
@@ -119,29 +283,46 @@ async function main(): Promise<void> {
       widgetName: 'tap_burst',
       viewsId: 'tap-burst-views',
       addId: 'tap-burst-add',
+      initialData: { particleCount: 10, burstDurationMs: 800 },
+      onStateReady: (api: unknown, wrapper: HTMLElement, initialData: unknown) => {
+        const typedApi = api as TapBurstApi;
+        const initData = initialData as { particleCount: number; burstDurationMs: number };
+        buildTapBurstOutputDisplay(wrapper, typedApi);
+        buildTapBurstControlPanel(wrapper, typedApi, initData);
+      },
     },
     {
       basePath: '/color-mixer/',
       widgetName: 'color_mixer',
       viewsId: 'color-mixer-views',
       addId: 'color-mixer-add',
+      initialData: { r: 0, g: 0, b: 0 },
+      onStateReady: (api: unknown, wrapper: HTMLElement, initialData: unknown) => {
+        const typedApi = api as ColorMixerApi;
+        const initData = initialData as { r: number; g: number; b: number };
+        buildColorMixerOutputDisplay(wrapper, typedApi);
+        buildColorMixerControlPanel(wrapper, typedApi, initData);
+      },
     },
   ];
 
   await Promise.all(
-    widgets.map(async ({ basePath, widgetName, viewsId, addId }) => {
+    widgets.map(async ({ basePath, widgetName, viewsId, addId, initialData, onStateReady }) => {
       const viewsContainer = document.getElementById(viewsId) as HTMLElement;
       const addBtn = document.getElementById(addId) as HTMLButtonElement;
 
       addBtn.addEventListener('click', async () => {
         addBtn.disabled = true;
         try {
-          await addView(basePath, viewsContainer, widgetName, addBtn);
+          const onStateReadyAndReenableBtn = (api: unknown, wrapper: HTMLElement, data: unknown) => {
+            addBtn.disabled = false;
+            onStateReady(api, wrapper, data);
+          };
+          await addView(basePath, viewsContainer, widgetName, addBtn, initialData, onStateReadyAndReenableBtn);
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
           console.error(`[widgets-preview] addView ${basePath}:`, msg);
           showError(viewsContainer, msg);
-        } finally {
           addBtn.disabled = false;
         }
       });
