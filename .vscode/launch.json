@@ -29,7 +29,7 @@
       "name": "widgets_preview (Node)",
       "request": "launch",
       "type": "node-terminal",
-      "command": "npm run start",
+      "command": "npm run dev",
       "cwd": "${workspaceFolder}/apps/widgets_preview",
     },
   ],
