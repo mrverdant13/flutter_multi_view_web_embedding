@@ -9,10 +9,10 @@ An interactive Flutter widget for mixing red, green, and blue color channels thr
 ## API
 
 ```dart
-ColorMixer({Key? key})
+ColorMixer({Key? key, ColorMixerController? controller})
 ```
 
-The widget is stateful and manages its own RGB values internally. There are no required parameters and no callbacks. It is intended as a standalone interactive demonstration.
+The widget is stateful. When no `controller` is provided it creates and manages its own internal `ColorMixerController`. Pass an external controller to observe or drive the color from outside the widget tree.
 
 ## Usage
 

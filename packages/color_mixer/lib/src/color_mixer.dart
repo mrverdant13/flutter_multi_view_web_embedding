@@ -1,5 +1,7 @@
 import 'package:flutter/widgets.dart';
 
+part 'color_mixer_controller.dart';
+
 const _kBackground = Color(0xFFF0F0F5);
 const _kTextColor = Color(0xFF2C2C3A);
 const _kSubtextColor = Color(0xFF8888A0);
@@ -21,107 +23,147 @@ const _kShadowOffset = Offset(0, 2);
 /// color is displayed as a large preview swatch with its hex code.
 ///
 /// This widget is self-contained and does not require a [WidgetsApp] ancestor.
+///
+/// Provide a [ColorMixerController] to drive the widget from outside or to
+/// receive color-change callbacks. If omitted, an internal controller is used.
 class ColorMixer extends StatefulWidget {
   /// Creates a [ColorMixer] widget.
-  const ColorMixer({super.key});
+  const ColorMixer({
+    super.key,
+    this.controller,
+  });
+
+  /// Optional controller for programmatic control and callback binding.
+  final ColorMixerController? controller;
 
   @override
   State<ColorMixer> createState() => _ColorMixerState();
 }
 
 class _ColorMixerState extends State<ColorMixer> {
-  var _r = 0.20;
-  var _g = 0.60;
-  var _b = 1.00;
+  ColorMixerController? _internalController;
 
-  Color get _color => Color.fromRGBO(
-        (_r * 255).round(),
-        (_g * 255).round(),
-        (_b * 255).round(),
-        1,
-      );
+  ColorMixerController get _controller =>
+      widget.controller ?? _internalController!;
 
-  String get _hex {
-    final r = (_r * 255).round().toRadixString(16).padLeft(2, '0');
-    final g = (_g * 255).round().toRadixString(16).padLeft(2, '0');
-    final b = (_b * 255).round().toRadixString(16).padLeft(2, '0');
-    return '#$r$g$b'.toUpperCase();
+  @override
+  void initState() {
+    super.initState();
+    if (widget.controller == null) {
+      _internalController = ColorMixerController();
+    }
+  }
+
+  @override
+  void didUpdateWidget(ColorMixer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      if (widget.controller == null) {
+        _internalController ??= ColorMixerController();
+      } else {
+        _internalController?.dispose();
+        _internalController = null;
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _internalController?.dispose();
+    _internalController = null;
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final rInt = (_r * 255).round();
-    final gInt = (_g * 255).round();
-    final bInt = (_b * 255).round();
+    return ValueListenableBuilder<Color>(
+      valueListenable: _controller,
+      builder: (context, color, _) {
+        final r = color.r;
+        final g = color.g;
+        final b = color.b;
+        final rInt = (r * 255).round();
+        final gInt = (g * 255).round();
+        final bInt = (b * 255).round();
 
-    return ColoredBox(
-      color: _kBackground,
-      child: Padding(
-        padding: const EdgeInsets.all(_kPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Color preview swatch
-            Expanded(
-              flex: 5,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(_kPreviewRadius),
-                child: ColoredBox(
-                  color: _color,
-                  child: const SizedBox.expand(),
+        final rHex = rInt.toRadixString(16).padLeft(2, '0');
+        final gHex = gInt.toRadixString(16).padLeft(2, '0');
+        final bHex = bInt.toRadixString(16).padLeft(2, '0');
+        final hex = '#$rHex$gHex$bHex'.toUpperCase();
+
+        return ColoredBox(
+          color: _kBackground,
+          child: Padding(
+            padding: const EdgeInsets.all(_kPadding),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Color preview swatch
+                Expanded(
+                  flex: 5,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(_kPreviewRadius),
+                    child: ColoredBox(
+                      color: color,
+                      child: const SizedBox.expand(),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 14),
+                const SizedBox(height: 14),
 
-            // Hex code
-            RichText(
-              textDirection: TextDirection.ltr,
-              textAlign: TextAlign.center,
-              text: TextSpan(
-                text: _hex,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 3,
-                  color: _kTextColor,
+                // Hex code
+                RichText(
+                  textDirection: TextDirection.ltr,
+                  textAlign: TextAlign.center,
+                  text: TextSpan(
+                    text: hex,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 3,
+                      color: _kTextColor,
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-            // R slider
-            _ColorSlider(
-              channel: 'R',
-              value: _r,
-              fromColor: Color.fromRGBO(0, gInt, bInt, 1),
-              toColor: Color.fromRGBO(255, gInt, bInt, 1),
-              onChanged: (v) => setState(() => _r = v),
-            ),
-            const SizedBox(height: 10),
+                // R slider
+                _ColorSlider(
+                  channel: 'R',
+                  value: r,
+                  fromColor: Color.fromRGBO(0, gInt, bInt, 1),
+                  toColor: Color.fromRGBO(255, gInt, bInt, 1),
+                  onChanged: (v) => _controller.color =
+                      Color.from(alpha: 1, red: v, green: g, blue: b),
+                ),
+                const SizedBox(height: 10),
 
-            // G slider
-            _ColorSlider(
-              channel: 'G',
-              value: _g,
-              fromColor: Color.fromRGBO(rInt, 0, bInt, 1),
-              toColor: Color.fromRGBO(rInt, 255, bInt, 1),
-              onChanged: (v) => setState(() => _g = v),
-            ),
-            const SizedBox(height: 10),
+                // G slider
+                _ColorSlider(
+                  channel: 'G',
+                  value: g,
+                  fromColor: Color.fromRGBO(rInt, 0, bInt, 1),
+                  toColor: Color.fromRGBO(rInt, 255, bInt, 1),
+                  onChanged: (v) => _controller.color =
+                      Color.from(alpha: 1, red: r, green: v, blue: b),
+                ),
+                const SizedBox(height: 10),
 
-            // B slider
-            _ColorSlider(
-              channel: 'B',
-              value: _b,
-              fromColor: Color.fromRGBO(rInt, gInt, 0, 1),
-              toColor: Color.fromRGBO(rInt, gInt, 255, 1),
-              onChanged: (v) => setState(() => _b = v),
+                // B slider
+                _ColorSlider(
+                  channel: 'B',
+                  value: b,
+                  fromColor: Color.fromRGBO(rInt, gInt, 0, 1),
+                  toColor: Color.fromRGBO(rInt, gInt, 255, 1),
+                  onChanged: (v) => _controller.color =
+                      Color.from(alpha: 1, red: r, green: g, blue: v),
+                ),
+                const SizedBox(height: 4),
+              ],
             ),
-            const SizedBox(height: 4),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
