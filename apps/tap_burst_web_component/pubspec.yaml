@@ -13,6 +13,7 @@ dependencies:
     path: ../../packages/multi_view_app
   tap_burst:
     path: ../../packages/tap_burst
+  web: ^1.1.0
 
 dev_dependencies:
   flutter_test:
