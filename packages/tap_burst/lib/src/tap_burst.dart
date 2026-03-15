@@ -2,8 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
 
-const _kParticleCount = 10;
-const _kBurstDuration = Duration(milliseconds: 800);
+part 'tap_burst_controller.dart';
+
 const _kBackground = Color(0xFF0D0D1A);
 const _kGridColor = Color(0xFF1E1E30);
 const _kGridSize = 40.0;
@@ -43,9 +43,15 @@ class _Burst {
 /// and fade away. Each tap cycles through a palette of vivid colors.
 ///
 /// This widget is self-contained and does not require a [WidgetsApp] ancestor.
+///
+/// Provide a [TapBurstController] to configure particle count and burst
+/// duration. If omitted, an internal controller is used.
 class TapBurst extends StatefulWidget {
   /// Creates a [TapBurst] widget.
-  const TapBurst({super.key});
+  const TapBurst({super.key, this.controller});
+
+  /// Optional controller for configuring particle count and burst duration.
+  final TapBurstController? controller;
 
   @override
   State<TapBurst> createState() => _TapBurstState();
@@ -56,45 +62,74 @@ class _TapBurstState extends State<TapBurst> with TickerProviderStateMixin {
   final _random = math.Random();
   var _colorIndex = 0;
 
+  TapBurstController? _internalController;
+
+  TapBurstController get _controller =>
+      widget.controller ?? _internalController!;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.controller == null) {
+      _internalController = TapBurstController();
+    }
+  }
+
+  @override
+  void didUpdateWidget(TapBurst oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      if (widget.controller != null) {
+        _internalController?.dispose();
+        _internalController = null;
+      } else {
+        _internalController ??= TapBurstController();
+      }
+    }
+  }
+
   @override
   void dispose() {
+    _internalController?.dispose();
+    _internalController = null;
     for (final burst in _bursts) {
       burst.controller.dispose();
     }
     super.dispose();
   }
 
-  void _onTapUp(TapUpDetails details) {
+  void _createBurst(Offset position) {
     final color = _kPalette[_colorIndex % _kPalette.length];
     _colorIndex++;
 
-    final angles = List<double>.generate(_kParticleCount, (i) {
-      final base = (i / _kParticleCount) * math.pi * 2;
+    final particleCount = _controller.particleCount;
+    final angles = List<double>.generate(particleCount, (i) {
+      final base = (i / particleCount) * math.pi * 2;
       return base + (_random.nextDouble() - 0.5) * 0.7;
     });
     final radii = List<double>.generate(
-      _kParticleCount,
+      particleCount,
       (_) => 50 + _random.nextDouble() * 45,
     );
     final sizes = List<double>.generate(
-      _kParticleCount,
+      particleCount,
       (_) => 5 + _random.nextDouble() * 6,
     );
 
-    final controller = AnimationController(
+    final animController = AnimationController(
       vsync: this,
-      duration: _kBurstDuration,
+      duration: _controller.burstDuration,
     );
     final burst = _Burst(
-      position: details.localPosition,
-      controller: controller,
+      position: position,
+      controller: animController,
       color: color,
       angles: angles,
       radii: radii,
       sizes: sizes,
     );
 
-    controller
+    animController
       ..addListener(() {
         if (mounted) setState(() {});
       })
@@ -107,6 +142,10 @@ class _TapBurstState extends State<TapBurst> with TickerProviderStateMixin {
       ..forward();
 
     setState(() => _bursts.add(burst));
+  }
+
+  void _onTapUp(TapUpDetails details) {
+    _createBurst(details.localPosition);
   }
 
   @override

@@ -9,10 +9,10 @@ An interactive Flutter widget that renders animated particle bursts at tap posit
 ## API
 
 ```dart
-TapBurst({Key? key})
+TapBurst({Key? key, TapBurstController? controller})
 ```
 
-The widget is stateful and manages its own animation state. There are no required parameters and no callbacks. It is intended as a standalone interactive demonstration.
+The widget is stateful. When no `controller` is provided it creates and manages its own internal `TapBurstController`. Pass an external controller to read or update `particleCount` and `burstDuration` from outside the widget tree.
 
 ## Usage
 
