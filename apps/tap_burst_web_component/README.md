@@ -20,16 +20,57 @@ On the host page, after loading [`flutter_bootstrap.js`](../../packages/flutter_
 
 ```js
 _flutter.loader.load({
-  config: { entryPointBaseUrl: '<base-url>' },
+  config: { entrypointBaseUrl: '<base-url>' },
   onEntrypointLoaded: async (engineInitializer) => {
     const appRunner = await engineInitializer.initializeEngine({
       assetBase: '<base-url>',
       multiViewEnabled: true,
     });
     const flutterApp = await appRunner.runApp(); // cache this
-    await flutterApp.addView({ hostElement: document.getElementById('<host-id>') });
+    const viewId = flutterApp.addView({
+      hostElement: document.getElementById('<host-id>'),
+      initialData: { particleCount: 20, burstDurationMs: 600 }, // optional
+    });
   },
 });
 ```
+
+### `initialData` shape
+
+| Field | Type | Notes |
+|---|---|---|
+| `particleCount` | `number` | Number of particles per burst. Clamped to 1–200. |
+| `burstDurationMs` | `number` | Burst animation duration in milliseconds. Clamped to 100–5000. |
+
+All fields are optional. Omitted fields use the widget defaults (`particleCount: 10`, `burstDurationMs: 800`).
+
+### JS API
+
+Once the Flutter widget is ready, it dispatches a `flutter::state_ready` CustomEvent on the host element. The event does not bubble. The `event.detail` object is the live API:
+
+```js
+hostElement.addEventListener('flutter::state_ready', (event) => {
+  const api = event.detail;
+
+  // Web → Flutter: adjust particle count and burst duration
+  api.particleCount = 30;      // integer, clamped to 1–200
+  api.burstDuration = 500;     // milliseconds, clamped to 100–5000
+
+  // Flutter → Web: receive change notifications
+  api.onParticleCountChanged = (n) => {
+    console.log('Particle count:', n);
+  };
+  api.onBurstDurationChanged = (ms) => {
+    console.log('Burst duration:', ms, 'ms');
+  };
+}, { once: true });
+```
+
+| Member | Direction | Notes |
+|---|---|---|
+| `particleCount` | Web → Flutter | Read/write. Integer, clamped to 1–200. |
+| `burstDuration` | Web → Flutter | Read/write. Milliseconds, clamped to 100–5000. |
+| `onParticleCountChanged` | Flutter → Web | Assign a `(n: number) => void` callback. Set to `null` to unsubscribe. |
+| `onBurstDurationChanged` | Flutter → Web | Assign a `(ms: number) => void` callback. Set to `null` to unsubscribe. |
 
 Refer to the [embedding guide](../../docs/embedding.md) for the full embedding pipeline, including race condition prevention when loading multiple Flutter apps on the same page.
