@@ -13,6 +13,7 @@ dependencies:
     sdk: flutter
   multi_view_app:
     path: ../../packages/multi_view_app
+  web: ^1.1.0
 
 dev_dependencies:
   flutter_test:
