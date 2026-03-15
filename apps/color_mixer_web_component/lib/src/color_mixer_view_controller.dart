@@ -14,6 +14,15 @@ class ColorMixerViewController extends ColorMixerController {
     addListener(_notifyJs);
   }
 
+  /// Red channel of the current color (0.0–1.0).
+  double get r => color.r;
+
+  /// Green channel of the current color (0.0–1.0).
+  double get g => color.g;
+
+  /// Blue channel of the current color (0.0–1.0).
+  double get b => color.b;
+
   /// JS callback invoked when the color changes.
   JSFunction? onColorChanged;
 
