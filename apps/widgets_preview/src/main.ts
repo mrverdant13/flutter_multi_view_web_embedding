@@ -4,6 +4,12 @@ type FlutterApp = Awaited<ReturnType<typeof getFlutterApp>>;
 type ViewEntry = { viewId: number; hostElement: HTMLElement; wrapper: HTMLElement };
 
 interface ColorMixerApi {
+  /** Red channel of the current color (0.0–1.0). */
+  readonly r: number;
+  /** Green channel of the current color (0.0–1.0). */
+  readonly g: number;
+  /** Blue channel of the current color (0.0–1.0). */
+  readonly b: number;
   /** Set color values (0.0–1.0). */
   setColor(r: number, g: number, b: number): void;
   /** Callback invoked on every color change (assign to register). */
@@ -80,13 +86,17 @@ function buildColorMixerOutputDisplay(wrapper: HTMLElement, api: ColorMixerApi):
   const display = document.createElement('div');
   display.className = 'output-display';
 
+  const toHex = (v: number) => Math.round(v * 255).toString(16).padStart(2, '0');
+  console.log(api)
+
   const colorText = document.createElement('span');
   colorText.className = 'output-value';
-  colorText.textContent = '—';
+  const initialHex = `#${toHex(api.r)}${toHex(api.g)}${toHex(api.b)}`;
+  colorText.textContent = initialHex;
+  colorText.style.color = initialHex;
   display.appendChild(colorText);
 
   api.onColorChanged = (r, g, b) => {
-    const toHex = (v: number) => Math.round(v * 255).toString(16).padStart(2, '0');
     const hex = `#${toHex(r)}${toHex(g)}${toHex(b)}`;
     colorText.textContent = hex;
     colorText.style.color = hex;
@@ -143,11 +153,11 @@ function buildTapBurstOutputDisplay(wrapper: HTMLElement, api: TapBurstApi): voi
 
   const countText = document.createElement('span');
   countText.className = 'output-value';
-  countText.textContent = '—';
+  countText.textContent = `${api.particleCount} particles`;
 
   const durText = document.createElement('span');
   durText.className = 'output-value';
-  durText.textContent = '—';
+  durText.textContent = `${api.burstDuration} ms`;
 
   display.appendChild(countText);
   display.appendChild(durText);
