@@ -53,6 +53,9 @@ Once the Flutter widget is ready, it dispatches a `flutter::state_ready` CustomE
 hostElement.addEventListener('flutter::state_ready', (event) => {
   const api = event.detail;
 
+  // Read current color channels (0.0–1.0)
+  console.log(api.r, api.g, api.b);
+
   // Web → Flutter: update the displayed color
   api.setColor(0.1, 0.9, 0.4); // r, g, b as floats 0.0–1.0
 
@@ -65,6 +68,9 @@ hostElement.addEventListener('flutter::state_ready', (event) => {
 
 | Member | Direction | Notes |
 |---|---|---|
+| `r` | Flutter → Web | Read-only. Red channel of the current color, float 0.0–1.0. |
+| `g` | Flutter → Web | Read-only. Green channel of the current color, float 0.0–1.0. |
+| `b` | Flutter → Web | Read-only. Blue channel of the current color, float 0.0–1.0. |
 | `setColor(r, g, b)` | Web → Flutter | Sets the color. Values are floats 0.0–1.0. |
 | `onColorChanged` | Flutter → Web | Assign a `(r, g, b) => void` callback. Set to `null` to unsubscribe. |
 
