@@ -81,25 +81,35 @@ function showError(container: HTMLElement, message: string): void {
   container.textContent = message;
 }
 
+const toColorHex = (v: number) => Math.round(v * 255).toString(16).padStart(2, '0');
+const rgbToHex = (r: number, g: number, b: number) =>
+  `#${toColorHex(r)}${toColorHex(g)}${toColorHex(b)}`.toUpperCase();
+
+function setSliderGradients(sliders: HTMLInputElement[], r: number, g: number, b: number): void {
+  const ri = Math.round(r * 255);
+  const gi = Math.round(g * 255);
+  const bi = Math.round(b * 255);
+  sliders[0].style.setProperty('--from-color', `rgb(0,${gi},${bi})`);
+  sliders[0].style.setProperty('--to-color', `rgb(255,${gi},${bi})`);
+  sliders[1].style.setProperty('--from-color', `rgb(${ri},0,${bi})`);
+  sliders[1].style.setProperty('--to-color', `rgb(${ri},255,${bi})`);
+  sliders[2].style.setProperty('--from-color', `rgb(${ri},${gi},0)`);
+  sliders[2].style.setProperty('--to-color', `rgb(${ri},${gi},255)`);
+}
+
+
 /** Builds and appends a Color Mixer output display to the view wrapper, wired to the given API. */
 function buildColorMixerOutputDisplay(wrapper: HTMLElement, api: ColorMixerApi): void {
   const display = document.createElement('div');
   display.className = 'output-display';
 
-  const toHex = (v: number) => Math.round(v * 255).toString(16).padStart(2, '0');
-  console.log(api)
-
-  const colorText = document.createElement('span');
-  colorText.className = 'output-value';
-  const initialHex = `#${toHex(api.r)}${toHex(api.g)}${toHex(api.b)}`;
-  colorText.textContent = initialHex;
-  colorText.style.color = initialHex;
-  display.appendChild(colorText);
+  const hexText = document.createElement('span');
+  hexText.className = 'output-value';
+  hexText.textContent = rgbToHex(api.r, api.g, api.b);
+  display.appendChild(hexText);
 
   api.onColorChanged = (r, g, b) => {
-    const hex = `#${toHex(r)}${toHex(g)}${toHex(b)}`;
-    colorText.textContent = hex;
-    colorText.style.color = hex;
+    hexText.textContent = rgbToHex(r, g, b);
   };
 
   wrapper.appendChild(display);
@@ -110,10 +120,25 @@ function buildColorMixerControlPanel(wrapper: HTMLElement, api: ColorMixerApi, i
   const panel = document.createElement('div');
   panel.className = 'control-panel';
 
+  const inner = document.createElement('div');
+  inner.className = 'color-mixer-inner';
+
+  const swatchCol = document.createElement('div');
+  swatchCol.className = 'color-swatch-col';
+  const swatch = document.createElement('div');
+  swatch.className = 'color-swatch';
+  swatchCol.appendChild(swatch);
+  inner.appendChild(swatchCol);
+
+  const slidersCol = document.createElement('div');
+  slidersCol.className = 'color-mixer-sliders';
+
   const sliders: HTMLInputElement[] = [];
+  const valSpans: HTMLElement[] = [];
   for (const [label, initVal] of [['R', init.r], ['G', init.g], ['B', init.b]] as [string, number][]) {
     const row = document.createElement('label');
     row.className = 'control-row';
+    row.dataset.channel = label.toLowerCase();
     const span = document.createElement('span');
     span.textContent = label;
     const input = document.createElement('input');
@@ -122,17 +147,36 @@ function buildColorMixerControlPanel(wrapper: HTMLElement, api: ColorMixerApi, i
     input.max = '1';
     input.step = '0.01';
     input.value = String(initVal);
+    const valSpan = document.createElement('span');
+    valSpan.className = 'color-value';
+    valSpan.textContent = String(toInt255(initVal));
     sliders.push(input);
+    valSpans.push(valSpan);
     row.appendChild(span);
     row.appendChild(input);
-    panel.appendChild(row);
+    row.appendChild(valSpan);
+    slidersCol.appendChild(row);
   }
+  inner.appendChild(slidersCol);
+  panel.appendChild(inner);
 
-  const fire = () => api.setColor(
-    parseFloat(sliders[0].value),
-    parseFloat(sliders[1].value),
-    parseFloat(sliders[2].value),
-  );
+  const updateSwatch = (r: number, g: number, b: number) => {
+    swatch.style.background = rgbToHex(r, g, b);
+    valSpans[0].textContent = String(toInt255(r));
+    valSpans[1].textContent = String(toInt255(g));
+    valSpans[2].textContent = String(toInt255(b));
+    setSliderGradients(sliders, r, g, b);
+  };
+
+  updateSwatch(init.r, init.g, init.b);
+
+  const fire = () => {
+    const r = parseFloat(sliders[0].value);
+    const g = parseFloat(sliders[1].value);
+    const b = parseFloat(sliders[2].value);
+    api.setColor(r, g, b);
+    setSliderGradients(sliders, r, g, b);
+  };
   sliders.forEach((s) => s.addEventListener('input', fire));
 
   const prevOnColorChanged = api.onColorChanged;
@@ -141,6 +185,7 @@ function buildColorMixerControlPanel(wrapper: HTMLElement, api: ColorMixerApi, i
     sliders[0].value = String(r);
     sliders[1].value = String(g);
     sliders[2].value = String(b);
+    updateSwatch(r, g, b);
   };
 
   wrapper.appendChild(panel);
@@ -300,7 +345,38 @@ async function removeView(basePath: string, entry: ViewEntry): Promise<void> {
   entry.wrapper.remove();
 }
 
+const toInt255 = (v: number) => Math.round(v * 255);
+
+function wireColorMixerConfigPreview(): void {
+  const rInput = document.getElementById('color-mixer-config-r') as HTMLInputElement;
+  const gInput = document.getElementById('color-mixer-config-g') as HTMLInputElement;
+  const bInput = document.getElementById('color-mixer-config-b') as HTMLInputElement;
+  const rVal = document.getElementById('color-mixer-config-r-val') as HTMLElement;
+  const gVal = document.getElementById('color-mixer-config-g-val') as HTMLElement;
+  const bVal = document.getElementById('color-mixer-config-b-val') as HTMLElement;
+  const swatch = document.getElementById('color-mixer-config-preview') as HTMLElement;
+  const hexLabel = document.getElementById('color-mixer-config-hex') as HTMLElement;
+  const configSliders = [rInput, gInput, bInput];
+  const update = () => {
+    const r = parseFloat(rInput.value);
+    const g = parseFloat(gInput.value);
+    const b = parseFloat(bInput.value);
+    const hex = rgbToHex(r, g, b);
+    swatch.style.background = hex;
+    hexLabel.textContent = hex;
+    rVal.textContent = String(toInt255(r));
+    gVal.textContent = String(toInt255(g));
+    bVal.textContent = String(toInt255(b));
+    setSliderGradients(configSliders, r, g, b);
+  };
+  rInput.addEventListener('input', update);
+  gInput.addEventListener('input', update);
+  bInput.addEventListener('input', update);
+  update();
+}
+
 async function main(): Promise<void> {
+  wireColorMixerConfigPreview();
   await loadScript('/flutter-bootstrap/flutter_bootstrap.js');
 
   const widgets = [

@@ -22,12 +22,14 @@
 
   <main class="grid">
     <article class="card">
-      <div class="card-header">
-        <span class="card-tag">tap_burst</span>
-        <h2>Tap Burst</h2>
-        <p>Tap anywhere inside the widget to create animated particle bursts</p>
+      <div class="card-content">
+        <div class="card-header">
+          <span class="card-tag">tap_burst</span>
+          <h2>Tap Burst</h2>
+          <p>Tap anywhere inside the widget to create animated particle bursts</p>
+        </div>
+        <div class="views" id="tap-burst-views"></div>
       </div>
-      <div class="views" id="tap-burst-views"></div>
       <div class="card-footer">
         <div class="config-panel">
           <span class="config-panel-label">Initial values for new views</span>
@@ -45,27 +47,40 @@
     </article>
 
     <article class="card">
-      <div class="card-header">
-        <span class="card-tag">color_mixer</span>
-        <h2>Color Mixer</h2>
-        <p>Drag the RGB sliders to blend your own color in real time</p>
+      <div class="card-content">
+        <div class="card-header">
+          <span class="card-tag">color_mixer</span>
+          <h2>Color Mixer</h2>
+          <p>Drag the RGB sliders to blend your own color in real time</p>
+        </div>
+        <div class="views" id="color-mixer-views"></div>
       </div>
-      <div class="views" id="color-mixer-views"></div>
       <div class="card-footer">
         <div class="config-panel">
           <span class="config-panel-label">Initial values for new views</span>
-          <label class="config-row">
-            <span>R</span>
-            <input type="range" id="color-mixer-config-r" min="0" max="1" step="0.01" value="0">
-          </label>
-          <label class="config-row">
-            <span>G</span>
-            <input type="range" id="color-mixer-config-g" min="0" max="1" step="0.01" value="0">
-          </label>
-          <label class="config-row">
-            <span>B</span>
-            <input type="range" id="color-mixer-config-b" min="0" max="1" step="0.01" value="0">
-          </label>
+          <div class="color-mixer-inner">
+            <div class="color-swatch-col">
+              <div class="color-swatch" id="color-mixer-config-preview"></div>
+              <span class="color-swatch-hex" id="color-mixer-config-hex">#000000</span>
+            </div>
+            <div class="color-mixer-sliders">
+              <label class="config-row" data-channel="r">
+                <span>R</span>
+                <input type="range" id="color-mixer-config-r" min="0" max="1" step="0.01" value="0">
+                <span class="color-value" id="color-mixer-config-r-val">0</span>
+              </label>
+              <label class="config-row" data-channel="g">
+                <span>G</span>
+                <input type="range" id="color-mixer-config-g" min="0" max="1" step="0.01" value="0">
+                <span class="color-value" id="color-mixer-config-g-val">0</span>
+              </label>
+              <label class="config-row" data-channel="b">
+                <span>B</span>
+                <input type="range" id="color-mixer-config-b" min="0" max="1" step="0.01" value="0">
+                <span class="color-value" id="color-mixer-config-b-val">0</span>
+              </label>
+            </div>
+          </div>
         </div>
         <button class="btn" id="color-mixer-add">+ Add view</button>
       </div>
