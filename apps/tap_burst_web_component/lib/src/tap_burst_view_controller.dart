@@ -21,11 +21,15 @@ class TapBurstViewController extends TapBurstController {
   /// JS callback invoked when burst duration changes.
   JSFunction? onBurstDurationChanged;
 
-  /// Updates the current particle count from JS.
+  @JSExport()
   @override
-  set particleCount(int value) {
-    super.particleCount = value;
+  int get particleCount {
+    return super.particleCount;
   }
+
+  @JSExport()
+  @override
+  set particleCount(int n) => super.particleCount = n;
 
   @JSExport('burstDuration')
   set burstDurationMs(int burstDurationMs) {
