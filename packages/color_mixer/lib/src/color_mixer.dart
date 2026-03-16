@@ -2,10 +2,11 @@ import 'package:flutter/widgets.dart';
 
 part 'color_mixer_controller.dart';
 
-const _kTextColor = Color(0xFFE4D8BC);
+const _kHexColor = Color(0xFFC8952A);
 const _kSubtextColor = Color(0xFF6A6043);
 const _kThumbColor = Color(0xFFE4D8BC);
 const _kThumbShadow = Color(0x66000000);
+const _kSwatchBorder = Color(0x18FFFFFF);
 
 const _kPadding = 20.0;
 const _kPreviewRadius = 16.0;
@@ -98,11 +99,11 @@ class _ColorMixerState extends State<ColorMixer> {
               // Color preview swatch
               Expanded(
                 flex: 5,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(_kPreviewRadius),
-                  child: ColoredBox(
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(_kPreviewRadius),
                     color: color,
-                    child: const SizedBox.expand(),
+                    border: Border.all(color: _kSwatchBorder),
                   ),
                 ),
               ),
@@ -117,8 +118,8 @@ class _ColorMixerState extends State<ColorMixer> {
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
-                    letterSpacing: 3,
-                    color: _kTextColor,
+                    letterSpacing: 4,
+                    color: _kHexColor,
                   ),
                 ),
               ),
