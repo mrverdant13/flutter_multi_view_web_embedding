@@ -4,8 +4,7 @@ import 'package:flutter/widgets.dart';
 
 part 'tap_burst_controller.dart';
 
-const _kBackground = Color(0xFF0D0D1A);
-const _kGridColor = Color(0xFF1E1E30);
+const _kGridColor = Color(0xFF221E14);
 const _kGridSize = 40.0;
 const _kPalette = <Color>[
   Color(0xFFFF6B6B),
@@ -153,14 +152,11 @@ class _TapBurstState extends State<TapBurst> with TickerProviderStateMixin {
     return GestureDetector(
       onTapUp: _onTapUp,
       child: SizedBox.expand(
-        child: ColoredBox(
-          color: _kBackground,
-          child: ClipRect(
-            child: CustomPaint(
-              painter: const _GridPainter(),
-              foregroundPainter: _BurstPainter(
-                bursts: List.unmodifiable(_bursts),
-              ),
+        child: ClipRect(
+          child: CustomPaint(
+            painter: const _GridPainter(),
+            foregroundPainter: _BurstPainter(
+              bursts: List.unmodifiable(_bursts),
             ),
           ),
         ),
