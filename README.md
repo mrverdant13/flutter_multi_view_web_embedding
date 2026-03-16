@@ -2,6 +2,8 @@
 
 A monorepo that demonstrates embedding multiple independent Flutter widgets in a single HTML page using Flutter's multi-view web API. It contains reusable Flutter packages, two Flutter web component apps, and a Vite + TypeScript host page that mounts both widgets side by side.
 
+![widgets preview](docs/sample.png)
+
 ---
 
 ## Repository structure
@@ -13,10 +15,12 @@ flutter_multi_view_web_embedding/
 │   ├── multi_view_app/             # Root widget for multi-view Flutter apps
 │   ├── color_mixer/                # Interactive RGB color-mixer Flutter widget
 │   └── tap_burst/                  # Animated particle-burst Flutter widget
-└── apps/
-    ├── color_mixer_web_component/  # Flutter web app wrapping the color_mixer widget
-    ├── tap_burst_web_component/    # Flutter web app wrapping the tap_burst widget
-    └── widgets_preview/            # Vite + TypeScript host page (the live demo)
+├── apps/
+│   ├── color_mixer_web_component/  # Flutter web app wrapping the color_mixer widget
+│   ├── tap_burst_web_component/    # Flutter web app wrapping the tap_burst widget
+│   └── widgets_preview/            # Vite + TypeScript host page (the live demo)
+└── docs/
+    └── embedding.md                # Full embedding API reference
 ```
 
 ---
