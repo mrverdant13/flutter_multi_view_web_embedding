@@ -4,7 +4,7 @@ import 'package:flutter/widgets.dart';
 
 part 'tap_burst_controller.dart';
 
-const _kGridColor = Color(0xFF221E14);
+const _kGridColor = Color(0xFF2D2820);
 const _kGridSize = 40.0;
 const _kPalette = <Color>[
   Color(0xFFFF6B6B),
@@ -168,16 +168,17 @@ class _TapBurstState extends State<TapBurst> with TickerProviderStateMixin {
 class _GridPainter extends CustomPainter {
   const _GridPainter();
 
+  static const _dotRadius = 1.5;
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = _kGridColor
-      ..strokeWidth = 1;
-    for (double x = 0; x <= size.width; x += _kGridSize) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
-    }
-    for (double y = 0; y <= size.height; y += _kGridSize) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+      ..style = PaintingStyle.fill;
+    for (var x = _kGridSize; x < size.width; x += _kGridSize) {
+      for (var y = _kGridSize; y < size.height; y += _kGridSize) {
+        canvas.drawCircle(Offset(x, y), _dotRadius, paint);
+      }
     }
   }
 
