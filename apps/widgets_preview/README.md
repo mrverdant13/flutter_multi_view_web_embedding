@@ -2,6 +2,8 @@
 
 A Vite + TypeScript host page that demonstrates both Flutter web components (`tap_burst` and `color_mixer`) embedded side by side on a single HTML page via the multi-view API.
 
+![widgets preview](../../docs/sample.png)
+
 ## Prerequisites
 
 - Node.js
