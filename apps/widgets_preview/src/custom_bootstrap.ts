@@ -119,6 +119,8 @@ export function getFlutterApp(
     );
     // Store before any await so concurrent callers find it immediately.
     appCache.set(key, asyncApp);
+    // Evict the entry if loading fails so the next caller gets a fresh attempt.
+    asyncApp.catch(() => { appCache.delete(key); });
     // Advance the queue to wait for this entry point's full init before
     // allowing the next load() to start.
     loadQueue = asyncApp.then(() => undefined, () => undefined);

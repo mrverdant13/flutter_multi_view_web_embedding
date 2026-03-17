@@ -1,7 +1,7 @@
 import { getFlutterApp } from './custom_bootstrap';
 
 type FlutterApp = Awaited<ReturnType<typeof getFlutterApp>>;
-type ViewEntry = { viewId: number; hostElement: HTMLElement; wrapper: HTMLElement };
+type ViewEntry = { viewId: number; hostElement: HTMLElement; wrapper: HTMLElement; stateReadyHandler: ((e: Event) => void) | null };
 
 interface ColorMixerApi {
   /** Red channel of the current color (0.0–1.0). */
@@ -45,6 +45,7 @@ function getTapBurstInitialData(): { particleCount: number; burstDurationMs: num
 
 /** Tracks active view entries per app, keyed on basePath. */
 const viewRegistry = new Map<string, ViewEntry[]>();
+
 
 /**
  * Dynamically loads a script by URL.
@@ -271,13 +272,14 @@ function buildTapBurstControlPanel(wrapper: HTMLElement, api: TapBurstApi, init:
  */
 async function addView(
   basePath: string,
+  assetBase: string,
   viewsContainer: HTMLElement,
   widgetName: string,
   addBtn: HTMLButtonElement,
   getInitialData: () => unknown,
   onStateReady?: (api: unknown, wrapper: HTMLElement, initialData: unknown) => void,
 ): Promise<FlutterApp> {
-  const app = await getFlutterApp(basePath, basePath);
+  const app = await getFlutterApp(basePath, assetBase);
   const initialData = getInitialData();
   const viewNumber = (viewRegistry.get(basePath)?.length ?? 0) + 1;
 
@@ -301,25 +303,36 @@ async function addView(
   wrapper.appendChild(host);
   viewsContainer.appendChild(wrapper);
 
-  if (onStateReady) {
-    host.addEventListener(
-      'flutter::state_ready',
-      (e) => onStateReady((e as CustomEvent).detail, wrapper, initialData),
-      { once: true },
-    );
+  // eslint-disable-next-line prefer-const
+  let viewId!: number;
+  const stateReadyHandler: ((e: Event) => void) | null = onStateReady
+    ? (e: Event) => {
+        onStateReady((e as CustomEvent).detail, wrapper, initialData);
+      }
+    : null;
+  if (stateReadyHandler) {
+    host.addEventListener('flutter::state_ready', stateReadyHandler, { once: true });
   }
 
-  const viewId = await app.addView({ hostElement: host, initialData });
+  try {
+    viewId = await app.addView({ hostElement: host, initialData });
+  } catch (err) {
+    if (stateReadyHandler) {
+      host.removeEventListener('flutter::state_ready', stateReadyHandler);
+    }
+    wrapper.remove();
+    throw err;
+  }
 
   if (!viewRegistry.has(basePath)) viewRegistry.set(basePath, []);
-  const entry: ViewEntry = { viewId, hostElement: host, wrapper };
+  const entry: ViewEntry = { viewId, hostElement: host, wrapper, stateReadyHandler };
   viewRegistry.get(basePath)!.push(entry);
 
   removeBtn.addEventListener('click', async () => {
     removeBtn.disabled = true;
     addBtn.disabled = true;
     try {
-      await removeView(basePath, entry);
+      await removeView(basePath, assetBase, entry);
     } catch (err) {
       console.error(`[widgets-preview] removeView ${basePath}:`, err);
       removeBtn.disabled = false;
@@ -334,13 +347,16 @@ async function addView(
 /**
  * Removes a specific view entry for the given app.
  */
-async function removeView(basePath: string, entry: ViewEntry): Promise<void> {
+async function removeView(basePath: string, assetBase: string, entry: ViewEntry): Promise<void> {
   const entries = viewRegistry.get(basePath);
   if (!entries) return;
   const index = entries.indexOf(entry);
   if (index === -1) return;
   entries.splice(index, 1);
-  const app = await getFlutterApp(basePath, basePath);
+  if (entry.stateReadyHandler) {
+    entry.hostElement.removeEventListener('flutter::state_ready', entry.stateReadyHandler);
+  }
+  const app = await getFlutterApp(basePath, assetBase);
   await app.removeView(entry.viewId);
   entry.wrapper.remove();
 }
@@ -420,7 +436,7 @@ async function main(): Promise<void> {
             addBtn.disabled = false;
             onStateReady(api, wrapper, data);
           };
-          await addView(basePath, viewsContainer, widgetName, addBtn, getInitialData, onStateReadyAndReenableBtn);
+          await addView(basePath, basePath, viewsContainer, widgetName, addBtn, getInitialData, onStateReadyAndReenableBtn);
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
           console.error(`[widgets-preview] addView ${basePath}:`, msg);
