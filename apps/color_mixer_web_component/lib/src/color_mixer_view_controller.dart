@@ -28,7 +28,12 @@ class ColorMixerViewController extends ColorMixerController {
 
   /// Updates the current color from JS.
   void setColor(double r, double g, double b) {
-    color = Color.from(alpha: 1, red: r, green: g, blue: b);
+    color = Color.from(
+      alpha: 1,
+      red: r.clamp(0.0, 1.0),
+      green: g.clamp(0.0, 1.0),
+      blue: b.clamp(0.0, 1.0),
+    );
   }
 
   void _notifyJs() {
