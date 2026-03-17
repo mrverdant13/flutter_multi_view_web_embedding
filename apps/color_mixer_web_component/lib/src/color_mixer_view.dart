@@ -9,6 +9,9 @@ import 'package:flutter/widgets.dart';
 
 /// Stateful entry-point widget for the Color Mixer web component.
 class ColorMixerView extends StatefulWidget {
+  /// The widget name used to namespace custom events.
+  static const widgetName = 'color_mixer';
+
   /// Creates a [ColorMixerView].
   const ColorMixerView({
     super.key,
