@@ -1,7 +1,7 @@
 import { getFlutterApp } from './custom_bootstrap';
 
 type FlutterApp = Awaited<ReturnType<typeof getFlutterApp>>;
-type ViewEntry = { viewId: number; hostElement: HTMLElement; wrapper: HTMLElement; stateReadyHandler: ((e: Event) => void) | null };
+type ViewEntry = { viewId: number; hostElement: HTMLElement; wrapper: HTMLElement; stateReadyHandler: ((e: Event) => void) | null; stateReadyEventName: string };
 
 interface ColorMixerApi {
   /** Red channel of the current color (0.0–1.0). */
@@ -303,6 +303,7 @@ async function addView(
   wrapper.appendChild(host);
   viewsContainer.appendChild(wrapper);
 
+  const stateReadyEventName = `flutter::${widgetName}::${widgetName.replaceAll('_', '-')}-view-controller-ready`;
   // eslint-disable-next-line prefer-const
   let viewId!: number;
   const stateReadyHandler: ((e: Event) => void) | null = onStateReady
@@ -311,21 +312,21 @@ async function addView(
       }
     : null;
   if (stateReadyHandler) {
-    host.addEventListener('flutter::state_ready', stateReadyHandler, { once: true });
+    host.addEventListener(stateReadyEventName, stateReadyHandler, { once: true });
   }
 
   try {
     viewId = await app.addView({ hostElement: host, initialData });
   } catch (err) {
     if (stateReadyHandler) {
-      host.removeEventListener('flutter::state_ready', stateReadyHandler);
+      host.removeEventListener(stateReadyEventName, stateReadyHandler);
     }
     wrapper.remove();
     throw err;
   }
 
   if (!viewRegistry.has(basePath)) viewRegistry.set(basePath, []);
-  const entry: ViewEntry = { viewId, hostElement: host, wrapper, stateReadyHandler };
+  const entry: ViewEntry = { viewId, hostElement: host, wrapper, stateReadyHandler, stateReadyEventName };
   viewRegistry.get(basePath)!.push(entry);
 
   removeBtn.addEventListener('click', async () => {
@@ -354,7 +355,7 @@ async function removeView(basePath: string, assetBase: string, entry: ViewEntry)
   if (index === -1) return;
   entries.splice(index, 1);
   if (entry.stateReadyHandler) {
-    entry.hostElement.removeEventListener('flutter::state_ready', entry.stateReadyHandler);
+    entry.hostElement.removeEventListener(entry.stateReadyEventName, entry.stateReadyHandler);
   }
   const app = await getFlutterApp(basePath, assetBase);
   await app.removeView(entry.viewId);
