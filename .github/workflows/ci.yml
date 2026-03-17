@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  dart:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install FVM
+        run: dart pub global activate fvm
+
+      - name: Install Flutter via FVM
+        run: |
+          export PATH="$PATH":"$HOME/.pub-cache/bin"
+          fvm install
+          fvm flutter --version
+
+      - name: Add Flutter to PATH
+        run: echo "$HOME/.fvm/versions/3.27.4/bin" >> $GITHUB_PATH
+
+      - name: Activate Melos
+        run: dart pub global activate melos
+
+      - name: Bootstrap
+        run: melos bootstrap
+
+      - name: Check formatting
+        run: melos run format.ci
+
+      - name: Analyze
+        run: melos run analyze.ci
+
+  typescript:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: apps/widgets_preview/package-lock.json
+
+      - name: Install dependencies
+        working-directory: apps/widgets_preview
+        run: npm ci
+
+      - name: Type check
+        working-directory: apps/widgets_preview
+        run: npm run typecheck
