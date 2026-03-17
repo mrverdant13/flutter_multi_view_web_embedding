@@ -46,8 +46,10 @@ function getTapBurstInitialData(): { particleCount: number; burstDurationMs: num
 /** Tracks active view entries per app, keyed on basePath. */
 const viewRegistry = new Map<string, ViewEntry[]>();
 
-/** Tracks view IDs that have been passed to app.addView() but have not yet fired state_ready. */
-const pendingViews = new Set<number>();
+/** Tracks views that have been passed to app.addView() but have not yet fired state_ready.
+ *  Keyed as "basePath::assetBase:viewId" — matching the app cache key — to avoid collisions
+ *  across apps with overlapping view IDs. */
+const pendingViews = new Set<string>();
 
 /**
  * Dynamically loads a script by URL.
@@ -274,13 +276,14 @@ function buildTapBurstControlPanel(wrapper: HTMLElement, api: TapBurstApi, init:
  */
 async function addView(
   basePath: string,
+  assetBase: string,
   viewsContainer: HTMLElement,
   widgetName: string,
   addBtn: HTMLButtonElement,
   getInitialData: () => unknown,
   onStateReady?: (api: unknown, wrapper: HTMLElement, initialData: unknown) => void,
 ): Promise<FlutterApp> {
-  const app = await getFlutterApp(basePath, basePath);
+  const app = await getFlutterApp(basePath, assetBase);
   const initialData = getInitialData();
   const viewNumber = (viewRegistry.get(basePath)?.length ?? 0) + 1;
 
@@ -309,7 +312,7 @@ async function addView(
   let viewId!: number;
   const stateReadyHandler: ((e: Event) => void) | null = onStateReady
     ? (e: Event) => {
-        pendingViews.delete(viewId);
+        pendingViews.delete(`${basePath}::${assetBase}:${viewId}`);
         onStateReady((e as CustomEvent).detail, wrapper, initialData);
       }
     : null;
@@ -327,7 +330,7 @@ async function addView(
     throw err;
   }
 
-  pendingViews.add(viewId);
+  pendingViews.add(`${basePath}::${assetBase}:${viewId}`);
 
   if (!viewRegistry.has(basePath)) viewRegistry.set(basePath, []);
   const entry: ViewEntry = { viewId, hostElement: host, wrapper, stateReadyHandler };
@@ -337,7 +340,7 @@ async function addView(
     removeBtn.disabled = true;
     addBtn.disabled = true;
     try {
-      await removeView(basePath, entry);
+      await removeView(basePath, assetBase, entry);
     } catch (err) {
       console.error(`[widgets-preview] removeView ${basePath}:`, err);
       removeBtn.disabled = false;
@@ -352,19 +355,19 @@ async function addView(
 /**
  * Removes a specific view entry for the given app.
  */
-async function removeView(basePath: string, entry: ViewEntry): Promise<void> {
+async function removeView(basePath: string, assetBase: string, entry: ViewEntry): Promise<void> {
   const entries = viewRegistry.get(basePath);
   if (!entries) return;
   const index = entries.indexOf(entry);
   if (index === -1) return;
   entries.splice(index, 1);
-  if (pendingViews.has(entry.viewId)) {
+  if (pendingViews.has(`${basePath}::${assetBase}:${entry.viewId}`)) {
     if (entry.stateReadyHandler) {
       entry.hostElement.removeEventListener('flutter::state_ready', entry.stateReadyHandler);
     }
-    pendingViews.delete(entry.viewId);
+    pendingViews.delete(`${basePath}::${assetBase}:${entry.viewId}`);
   }
-  const app = await getFlutterApp(basePath, basePath);
+  const app = await getFlutterApp(basePath, assetBase);
   await app.removeView(entry.viewId);
   entry.wrapper.remove();
 }
@@ -444,7 +447,7 @@ async function main(): Promise<void> {
             addBtn.disabled = false;
             onStateReady(api, wrapper, data);
           };
-          await addView(basePath, viewsContainer, widgetName, addBtn, getInitialData, onStateReadyAndReenableBtn);
+          await addView(basePath, basePath, viewsContainer, widgetName, addBtn, getInitialData, onStateReadyAndReenableBtn);
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
           console.error(`[widgets-preview] addView ${basePath}:`, msg);
