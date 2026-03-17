@@ -8,7 +8,7 @@ class TapBurstController implements Listenable {
     Duration burstDuration = defaultBurstDuration,
   })  : particleCountNotifier =
             ValueNotifier(particleCount.asValidParticleCount),
-        burstDurationNotifier = ValueNotifier(burstDuration);
+        burstDurationNotifier = ValueNotifier(burstDuration.asValidBurstDuration);
 
   /// Default number of particles per burst.
   static const defaultParticleCount = 10;
@@ -46,7 +46,8 @@ class TapBurstController implements Listenable {
 
   /// Duration of each burst animation (clamped to 100–5000 ms).
   Duration get burstDuration => burstDurationNotifier.value;
-  set burstDuration(Duration d) => burstDurationNotifier.value = d;
+  set burstDuration(Duration d) =>
+      burstDurationNotifier.value = d.asValidBurstDuration;
 
   /// Releases the internal [ValueNotifier]s.
   void dispose() {
@@ -57,4 +58,9 @@ class TapBurstController implements Listenable {
 
 extension on int {
   int get asValidParticleCount => clamp(1, 200).toInt();
+}
+
+extension on Duration {
+  Duration get asValidBurstDuration =>
+      Duration(milliseconds: inMilliseconds.clamp(100, 5000));
 }
