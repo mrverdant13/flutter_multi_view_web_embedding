@@ -8,7 +8,8 @@ class TapBurstController implements Listenable {
     Duration burstDuration = defaultBurstDuration,
   })  : particleCountNotifier =
             ValueNotifier(particleCount.asValidParticleCount),
-        burstDurationNotifier = ValueNotifier(burstDuration.asValidBurstDuration);
+        burstDurationNotifier =
+            ValueNotifier(burstDuration.asValidBurstDuration);
 
   /// Default number of particles per burst.
   static const defaultParticleCount = 10;
