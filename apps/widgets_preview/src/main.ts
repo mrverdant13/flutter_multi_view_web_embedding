@@ -46,10 +46,6 @@ function getTapBurstInitialData(): { particleCount: number; burstDurationMs: num
 /** Tracks active view entries per app, keyed on basePath. */
 const viewRegistry = new Map<string, ViewEntry[]>();
 
-/** Tracks views that have been passed to app.addView() but have not yet fired state_ready.
- *  Keyed as "basePath::assetBase:viewId" — matching the app cache key — to avoid collisions
- *  across apps with overlapping view IDs. */
-const pendingViews = new Set<string>();
 
 /**
  * Dynamically loads a script by URL.
@@ -307,12 +303,10 @@ async function addView(
   wrapper.appendChild(host);
   viewsContainer.appendChild(wrapper);
 
-  // viewId is assigned after app.addView() resolves; the handler only fires after that point.
   // eslint-disable-next-line prefer-const
   let viewId!: number;
   const stateReadyHandler: ((e: Event) => void) | null = onStateReady
     ? (e: Event) => {
-        pendingViews.delete(`${basePath}::${assetBase}:${viewId}`);
         onStateReady((e as CustomEvent).detail, wrapper, initialData);
       }
     : null;
@@ -329,8 +323,6 @@ async function addView(
     wrapper.remove();
     throw err;
   }
-
-  pendingViews.add(`${basePath}::${assetBase}:${viewId}`);
 
   if (!viewRegistry.has(basePath)) viewRegistry.set(basePath, []);
   const entry: ViewEntry = { viewId, hostElement: host, wrapper, stateReadyHandler };
@@ -361,11 +353,8 @@ async function removeView(basePath: string, assetBase: string, entry: ViewEntry)
   const index = entries.indexOf(entry);
   if (index === -1) return;
   entries.splice(index, 1);
-  if (pendingViews.has(`${basePath}::${assetBase}:${entry.viewId}`)) {
-    if (entry.stateReadyHandler) {
-      entry.hostElement.removeEventListener('flutter::state_ready', entry.stateReadyHandler);
-    }
-    pendingViews.delete(`${basePath}::${assetBase}:${entry.viewId}`);
+  if (entry.stateReadyHandler) {
+    entry.hostElement.removeEventListener('flutter::state_ready', entry.stateReadyHandler);
   }
   const app = await getFlutterApp(basePath, assetBase);
   await app.removeView(entry.viewId);
