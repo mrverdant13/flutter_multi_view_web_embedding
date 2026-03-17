@@ -1,7 +1,7 @@
 import { getFlutterApp } from './custom_bootstrap';
 
 type FlutterApp = Awaited<ReturnType<typeof getFlutterApp>>;
-type ViewEntry = { viewId: number; hostElement: HTMLElement; wrapper: HTMLElement };
+type ViewEntry = { viewId: number; hostElement: HTMLElement; wrapper: HTMLElement; stateReadyHandler: ((e: Event) => void) | null };
 
 interface ColorMixerApi {
   /** Red channel of the current color (0.0–1.0). */
@@ -45,6 +45,9 @@ function getTapBurstInitialData(): { particleCount: number; burstDurationMs: num
 
 /** Tracks active view entries per app, keyed on basePath. */
 const viewRegistry = new Map<string, ViewEntry[]>();
+
+/** Tracks view IDs that have been passed to app.addView() but have not yet fired state_ready. */
+const pendingViews = new Set<number>();
 
 /**
  * Dynamically loads a script by URL.
@@ -301,18 +304,33 @@ async function addView(
   wrapper.appendChild(host);
   viewsContainer.appendChild(wrapper);
 
-  if (onStateReady) {
-    host.addEventListener(
-      'flutter::state_ready',
-      (e) => onStateReady((e as CustomEvent).detail, wrapper, initialData),
-      { once: true },
-    );
+  // viewId is assigned after app.addView() resolves; the handler only fires after that point.
+  // eslint-disable-next-line prefer-const
+  let viewId!: number;
+  const stateReadyHandler: ((e: Event) => void) | null = onStateReady
+    ? (e: Event) => {
+        pendingViews.delete(viewId);
+        onStateReady((e as CustomEvent).detail, wrapper, initialData);
+      }
+    : null;
+  if (stateReadyHandler) {
+    host.addEventListener('flutter::state_ready', stateReadyHandler, { once: true });
   }
 
-  const viewId = await app.addView({ hostElement: host, initialData });
+  try {
+    viewId = await app.addView({ hostElement: host, initialData });
+  } catch (err) {
+    if (stateReadyHandler) {
+      host.removeEventListener('flutter::state_ready', stateReadyHandler);
+    }
+    wrapper.remove();
+    throw err;
+  }
+
+  pendingViews.add(viewId);
 
   if (!viewRegistry.has(basePath)) viewRegistry.set(basePath, []);
-  const entry: ViewEntry = { viewId, hostElement: host, wrapper };
+  const entry: ViewEntry = { viewId, hostElement: host, wrapper, stateReadyHandler };
   viewRegistry.get(basePath)!.push(entry);
 
   removeBtn.addEventListener('click', async () => {
@@ -340,6 +358,12 @@ async function removeView(basePath: string, entry: ViewEntry): Promise<void> {
   const index = entries.indexOf(entry);
   if (index === -1) return;
   entries.splice(index, 1);
+  if (pendingViews.has(entry.viewId)) {
+    if (entry.stateReadyHandler) {
+      entry.hostElement.removeEventListener('flutter::state_ready', entry.stateReadyHandler);
+    }
+    pendingViews.delete(entry.viewId);
+  }
   const app = await getFlutterApp(basePath, basePath);
   await app.removeView(entry.viewId);
   entry.wrapper.remove();
