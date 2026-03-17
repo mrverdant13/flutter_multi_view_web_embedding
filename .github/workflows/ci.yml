@@ -14,19 +14,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install FVM
-        run: dart pub global activate fvm
+      - name: Set up FVM
+        uses: ./.github/actions/fvm-setup
 
       - name: Install Flutter via FVM
         run: |
-          export PATH="$PATH":"$HOME/.pub-cache/bin"
           fvm install
           fvm flutter --version
-
-      - name: Add Flutter and pub-cache to PATH
-        run: |
-          echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH
-          echo "$HOME/.fvm/versions/3.27.4/bin" >> $GITHUB_PATH
 
       - name: Activate Melos
         run: dart pub global activate melos
@@ -48,8 +42,8 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'npm'
+          node-version: "22"
+          cache: "npm"
           cache-dependency-path: apps/widgets_preview/package-lock.json
 
       - name: Install dependencies
