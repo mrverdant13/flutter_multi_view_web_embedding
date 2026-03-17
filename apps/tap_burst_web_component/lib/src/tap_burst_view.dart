@@ -9,6 +9,9 @@ import 'package:tap_burst_web_component/src/tap_burst_view_controller.dart';
 
 /// Stateful entry-point widget for the Tap Burst web component.
 class TapBurstView extends StatefulWidget {
+  /// The unique widget name used to namespace custom events.
+  static const widgetName = 'tap_burst';
+
   /// Creates a [TapBurstView].
   const TapBurstView({super.key});
 
