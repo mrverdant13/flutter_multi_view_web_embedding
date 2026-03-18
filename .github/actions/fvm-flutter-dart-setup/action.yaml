@@ -1,0 +1,29 @@
+name: FVM + Flutter + Dart Setup
+description: Installs FVM, installs the target Flutter version, and makes `flutter` and `dart` globally available
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Dart
+      uses: dart-lang/setup-dart@v1
+    - name: Install FVM
+      shell: bash
+      run: dart pub global activate fvm
+    - name: Add pub cache to PATH
+      shell: bash
+      run: echo "$HOME/.pub-cache/bin" >> "$GITHUB_PATH"
+    - name: Print FVM version
+      shell: bash
+      run: fvm --version
+    - name: Install Flutter via FVM
+      shell: bash
+      run: fvm install
+    - name: Add `flutter` and `dart` to PATH
+      shell: bash
+      run: echo "$GITHUB_WORKSPACE/.fvm/flutter_sdk/bin" >> "$GITHUB_PATH"
+    - name: Print Flutter version
+      shell: bash
+      run: flutter --version
+    - name: Print Dart version
+      shell: bash
+      run: dart --version

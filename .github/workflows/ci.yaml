@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  dart:
+    name: Dart
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up FVM + Flutter + Dart
+        uses: ./.github/actions/fvm-flutter-dart-setup
+
+      - name: Activate Melos
+        run: dart pub global activate melos
+
+      - name: Bootstrap
+        run: melos bootstrap
+
+      - name: Check formatting
+        run: melos run format.ci
+
+      - name: Analyze
+        run: melos run analyze.ci
+
+  typescript:
+    name: TypeScript
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: apps/widgets_preview/package-lock.json
+
+      - name: Install dependencies
+        working-directory: apps/widgets_preview
+        run: npm ci
+
+      - name: Type check
+        working-directory: apps/widgets_preview
+        run: npm run typecheck
