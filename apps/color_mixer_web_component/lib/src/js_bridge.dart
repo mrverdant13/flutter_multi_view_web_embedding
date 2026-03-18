@@ -18,7 +18,7 @@ void dispatchColorMixerApi(
   hostElement?.dispatchEvent(
     web.CustomEvent(
       'flutter::${ColorMixerView.widgetName}'
-          '::color-mixer-view-controller-ready',
+      '::color-mixer-view-controller-ready',
       web.CustomEventInit(
         detail: createJSInteropWrapper(controller),
         bubbles: false,
