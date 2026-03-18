@@ -17,11 +17,6 @@ jobs:
       - name: Set up FVM
         uses: ./.github/actions/fvm-setup
 
-      - name: Install Flutter via FVM
-        run: |
-          fvm install
-          fvm flutter --version
-
       - name: Activate Melos
         run: dart pub global activate melos
 

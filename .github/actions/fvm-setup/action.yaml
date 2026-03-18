@@ -1,5 +1,5 @@
 name: FVM Setup
-description: Installs FVM and adds it to the PATH
+description: Installs FVM, installs the target Flutter version, and makes flutter and dart globally available
 
 runs:
   using: composite
@@ -10,3 +10,9 @@ runs:
     - name: Add FVM to PATH
       shell: bash
       run: echo "$HOME/fvm/bin" >> "$GITHUB_PATH"
+    - name: Install Flutter via FVM
+      shell: bash
+      run: fvm install
+    - name: Add Flutter and Dart to PATH
+      shell: bash
+      run: echo "$HOME/fvm/versions/$($HOME/fvm/bin/fvm current)/bin" >> "$GITHUB_PATH"
