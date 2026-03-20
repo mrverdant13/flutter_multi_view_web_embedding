@@ -295,5 +295,20 @@ void main() {
         expect(tester.takeException(), isNull);
       });
     });
+
+    group('painters', () {
+      testWidgets('grid painter shouldRepaint returns false', (tester) async {
+        await tester.pumpWidget(
+          const Directionality(
+            textDirection: TextDirection.ltr,
+            child: SizedBox(width: 400, height: 400, child: TapBurst()),
+          ),
+        );
+
+        final painter =
+            tester.widget<CustomPaint>(find.byType(CustomPaint).first).painter!;
+        expect(painter.shouldRepaint(painter), isFalse);
+      });
+    });
   });
 }
