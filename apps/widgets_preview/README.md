@@ -43,6 +43,14 @@ Output is written to `dist/`.
 
 Because `_flutter.loader.load()` is only called on the first **+ Add view** click, each web component's entry point (`main.dart.js`) is fetched lazily. Nothing is downloaded until the user requests a view. You can verify this in Chromium DevTools: open the **Sources** tab before adding any view and confirm that neither `tap-burst` nor `color-mixer` assets appear. They are fetched only after the corresponding button is clicked.
 
+## Testing
+
+```sh
+npm test
+```
+
+Runs unit tests with Vitest (jsdom environment). Tests cover the pure utility functions (`toColorHex`, `rgbToHex`, `toInt255`), DOM builders (`showError`, `loadScript`, `buildColorMixerOutputDisplay`, `buildColorMixerControlPanel`, `buildTapBurstOutputDisplay`, `buildTapBurstControlPanel`), config readers (`getColorMixerInitialData`, `getTapBurstInitialData`), and the `getFlutterApp` caching/serialization logic in `custom_bootstrap.ts`.
+
 ## Project structure
 
 ```
