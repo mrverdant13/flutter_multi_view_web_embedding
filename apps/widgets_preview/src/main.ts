@@ -29,7 +29,7 @@ interface TapBurstApi {
 
 
 /** Reads Color Mixer initial config from the config panel inputs. */
-function getColorMixerInitialData(): { r: number; g: number; b: number } {
+export function getColorMixerInitialData(): { r: number; g: number; b: number } {
   const r = parseFloat((document.getElementById('color-mixer-config-r') as HTMLInputElement)?.value ?? '0');
   const g = parseFloat((document.getElementById('color-mixer-config-g') as HTMLInputElement)?.value ?? '0');
   const b = parseFloat((document.getElementById('color-mixer-config-b') as HTMLInputElement)?.value ?? '0');
@@ -37,7 +37,7 @@ function getColorMixerInitialData(): { r: number; g: number; b: number } {
 }
 
 /** Reads Tap Burst initial config from the config panel inputs. */
-function getTapBurstInitialData(): { particleCount: number; burstDurationMs: number } {
+export function getTapBurstInitialData(): { particleCount: number; burstDurationMs: number } {
   const particleCount = parseInt((document.getElementById('tap-burst-config-particle-count') as HTMLInputElement)?.value ?? '10', 10);
   const burstDurationMs = parseInt((document.getElementById('tap-burst-config-burst-duration') as HTMLInputElement)?.value ?? '800', 10);
   return { particleCount, burstDurationMs };
@@ -51,24 +51,21 @@ const viewRegistry = new Map<string, ViewEntry[]>();
  * Dynamically loads a script by URL.
  * Rejects if the script fails to load.
  */
-function loadScript(src: string): Promise<void> {
+export function loadScript(src: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const el = document.createElement('script');
     el.src = src;
     el.onload = () => resolve();
     el.onerror = () =>
       reject(
-        new Error(
-          `Failed to load "${src}".\n` +
-          'Run "npm run prestart" or "npm run prebuild" to generate Flutter assets.',
-        ),
+        new Error(`Failed to load "${src}".\nRun "npm run prestart" or "npm run prebuild" to generate Flutter assets.`),
       );
     document.head.appendChild(el);
   });
 }
 
 /** Displays an error message inside the views container. */
-function showError(container: HTMLElement, message: string): void {
+export function showError(container: HTMLElement, message: string): void {
   Object.assign(container.style, {
     display: 'flex',
     alignItems: 'center',
@@ -82,8 +79,8 @@ function showError(container: HTMLElement, message: string): void {
   container.textContent = message;
 }
 
-const toColorHex = (v: number) => Math.round(v * 255).toString(16).padStart(2, '0');
-const rgbToHex = (r: number, g: number, b: number) =>
+export const toColorHex = (v: number) => Math.round(v * 255).toString(16).padStart(2, '0');
+export const rgbToHex = (r: number, g: number, b: number) =>
   `#${toColorHex(r)}${toColorHex(g)}${toColorHex(b)}`.toUpperCase();
 
 function setSliderGradients(sliders: HTMLInputElement[], r: number, g: number, b: number): void {
@@ -100,7 +97,7 @@ function setSliderGradients(sliders: HTMLInputElement[], r: number, g: number, b
 
 
 /** Builds and appends a Color Mixer output display to the view wrapper, wired to the given API. */
-function buildColorMixerOutputDisplay(wrapper: HTMLElement, api: ColorMixerApi): void {
+export function buildColorMixerOutputDisplay(wrapper: HTMLElement, api: ColorMixerApi): void {
   const display = document.createElement('div');
   display.className = 'output-display';
 
@@ -117,7 +114,7 @@ function buildColorMixerOutputDisplay(wrapper: HTMLElement, api: ColorMixerApi):
 }
 
 /** Builds and appends a Color Mixer control panel to the view wrapper, wired to the given API. */
-function buildColorMixerControlPanel(wrapper: HTMLElement, api: ColorMixerApi, init: { r: number; g: number; b: number }): void {
+export function buildColorMixerControlPanel(wrapper: HTMLElement, api: ColorMixerApi, init: { r: number; g: number; b: number }): void {
   const panel = document.createElement('div');
   panel.className = 'control-panel';
 
@@ -193,7 +190,7 @@ function buildColorMixerControlPanel(wrapper: HTMLElement, api: ColorMixerApi, i
 }
 
 /** Builds and appends a Tap Burst output display to the view wrapper, wired to the given API. */
-function buildTapBurstOutputDisplay(wrapper: HTMLElement, api: TapBurstApi): void {
+export function buildTapBurstOutputDisplay(wrapper: HTMLElement, api: TapBurstApi): void {
   const display = document.createElement('div');
   display.className = 'output-display';
 
@@ -219,7 +216,7 @@ function buildTapBurstOutputDisplay(wrapper: HTMLElement, api: TapBurstApi): voi
 }
 
 /** Builds and appends a Tap Burst control panel to the view wrapper, wired to the given API. */
-function buildTapBurstControlPanel(wrapper: HTMLElement, api: TapBurstApi, init: { particleCount: number; burstDurationMs: number }): void {
+export function buildTapBurstControlPanel(wrapper: HTMLElement, api: TapBurstApi, init: { particleCount: number; burstDurationMs: number }): void {
   const panel = document.createElement('div');
   panel.className = 'control-panel';
 
@@ -270,7 +267,7 @@ function buildTapBurstControlPanel(wrapper: HTMLElement, api: TapBurstApi, init:
  * Creates a new Flutter view and appends it to the views container.
  * Each wrapper includes a per-view remove button.
  */
-async function addView(
+export async function addView(
   basePath: string,
   assetBase: string,
   viewsContainer: HTMLElement,
@@ -348,10 +345,10 @@ async function addView(
 /**
  * Removes a specific view entry for the given app.
  */
-async function removeView(basePath: string, assetBase: string, entry: ViewEntry): Promise<void> {
-  const entries = viewRegistry.get(basePath);
+export async function removeView(basePath: string, assetBase: string, entry: ViewEntry): Promise<void> {
+  const entries = viewRegistry.get(basePath); /* v8 ignore next */
   if (!entries) return;
-  const index = entries.indexOf(entry);
+  const index = entries.indexOf(entry); /* v8 ignore next */
   if (index === -1) return;
   entries.splice(index, 1);
   if (entry.stateReadyHandler) {
@@ -362,9 +359,9 @@ async function removeView(basePath: string, assetBase: string, entry: ViewEntry)
   entry.wrapper.remove();
 }
 
-const toInt255 = (v: number) => Math.round(v * 255);
+export const toInt255 = (v: number) => Math.round(v * 255);
 
-function wireColorMixerConfigPreview(): void {
+export function wireColorMixerConfigPreview(): void {
   const rInput = document.getElementById('color-mixer-config-r') as HTMLInputElement;
   const gInput = document.getElementById('color-mixer-config-g') as HTMLInputElement;
   const bInput = document.getElementById('color-mixer-config-b') as HTMLInputElement;
@@ -392,7 +389,7 @@ function wireColorMixerConfigPreview(): void {
   update();
 }
 
-async function main(): Promise<void> {
+export async function main(): Promise<void> {
   wireColorMixerConfigPreview();
   await loadScript('/flutter-bootstrap/flutter_bootstrap.js');
 
@@ -450,6 +447,10 @@ async function main(): Promise<void> {
   );
 }
 
-main().catch((err: unknown) => {
-  console.error('[widgets-preview]', err);
-});
+/* v8 ignore start */
+if (!import.meta.env.VITEST) {
+  main().catch((err: unknown) => {
+    console.error('[widgets-preview]', err);
+  });
+}
+/* v8 ignore end */
