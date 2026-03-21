@@ -74,3 +74,17 @@ hostElement.addEventListener('flutter::state_ready', (event) => {
 | `onBurstDurationChanged` | Flutter → Web | Assign a `(ms: number) => void` callback. Set to `null` to unsubscribe. |
 
 Refer to the [embedding guide](../../docs/embedding.md) for the full embedding pipeline, including race condition prevention when loading multiple Flutter apps on the same page.
+
+## Testing
+
+```sh
+# Widget and controller tests, which require Chrome (dart:js_interop / dart:ui_web)
+flutter test --platform chrome
+
+# Coverage, which runs a VM-only placeholder test and produces an empty lcov (100%)
+flutter test --coverage
+```
+
+All source files in this app depend on `dart:js_interop` or `dart:ui_web`, which are browser-only libraries unavailable on the Dart VM. The widget and controller test files are therefore annotated `@TestOn('browser')` and must run with `--platform chrome`.
+
+`flutter test --coverage` runs a single VM-compatible placeholder test and produces an empty `coverage/lcov.info`. The empty report reflects that no lib source is reachable from the VM, not a gap in test quality — the substantive coverage is provided by the Chrome test suite. `flutter test --platform chrome --coverage` is not supported by the Flutter tooling and does not produce a coverage report.
