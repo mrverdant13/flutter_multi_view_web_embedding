@@ -6,3 +6,6 @@
 .pub/
 build/
 pubspec_overrides.yaml
+
+# Testing
+coverage/
