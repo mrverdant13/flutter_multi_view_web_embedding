@@ -46,3 +46,21 @@ scripts:
     description: Analyze codebase and check for analysis errors
     run: >
       dart analyze --fatal-infos --fatal-warnings .
+
+  test:
+    description: Run tests
+    run: >
+      flutter test
+    exec:
+      concurrency: 1
+    packageFilters:
+      dirExists:
+        - test
+  test.all:
+    description: Run tests for all packages
+    run: >
+      melos run --no-select test
+  test.ci:
+    description: Run tests and fail on any test error
+    run: >
+      melos exec -- flutter test
