@@ -19,6 +19,7 @@
 
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, renameSync, writeFileSync } from 'node:fs';
+import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -142,7 +143,8 @@ function extractLowerBound(constraint) {
  * Returns null if the binary cannot be found on disk.
  */
 function resolveFvmFlutterBin(version) {
-  const candidate = join(process.env.HOME, 'fvm', 'versions', version, 'bin', 'flutter');
+  const fvmHome = process.env.FVM_HOME ?? join(homedir(), 'fvm');
+  const candidate = join(fvmHome, 'versions', version, 'bin', 'flutter');
   return existsSync(candidate) ? candidate : null;
 }
 
