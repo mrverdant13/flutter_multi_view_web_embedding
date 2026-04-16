@@ -1,292 +1,130 @@
 #!/usr/bin/env node
 /**
- * Builds every Flutter package that has a `web/package.json` file, using the
- * lower bound of the Flutter SDK constraint in each package's `pubspec.yaml`
- * (`environment.flutter`).
+ * Builds every Flutter package that opts in by placing a `web/package.json`
+ * alongside its `pubspec.yaml`, then packs each build output as an npm tarball.
  *
- * Verification: pinned versions are checked against `fvm list` before
- * building. If a version is missing, the tool exits with an actionable error.
- *
- * After a successful build, writes `build/web/package.json` by merging:
- *   - name, description, version  →  derived from pubspec.yaml
- *   - all other fields            →  carried over from web/package.json
- *
- * A package opts in to this tool by having both `pubspec.yaml` and
- * `web/package.json` inside its directory.
+ * Package discovery and per-package Flutter SDK resolution are fully delegated
+ * to flutter-mono (tool/flutter-mono.mjs). This script only handles the
+ * post-build pipeline: merging package metadata, running `npm pack`, and
+ * renaming the resulting tarball.
  *
  * Usage: node tool/build-flutter-packages.mjs
  */
 
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
-import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
+const scriptDir = dirname(fileURLToPath(import.meta.url));
+const repoRoot = join(scriptDir, '..');
+const flutterMono = join(scriptDir, 'flutter-mono.mjs');
 
-// ─── pubspec.yaml parser ────────────────────────────────────────────────────
-//
-// Extracts only the fields this tool needs:
-//   name, description, version  (top-level scalars / block scalars)
-//   environment.flutter         (nested scalar)
-
-function parsePubspec(pubspecPath) {
-  const lines = readFileSync(pubspecPath, 'utf8').split('\n');
-  const result = {};
-  let i = 0;
-
-  while (i < lines.length) {
-    const line = lines[i];
-    const trimmed = line.trimStart();
-    const indent = line.length - trimmed.length;
-
-    // Only process non-empty, non-comment, top-level lines.
-    if (indent !== 0 || !trimmed || trimmed.startsWith('#')) {
-      i++;
-      continue;
-    }
-
-    const colonIdx = trimmed.indexOf(':');
-    if (colonIdx === -1) { i++; continue; }
-
-    const key = trimmed.slice(0, colonIdx).trim();
-    const afterColon = trimmed.slice(colonIdx + 1).trim();
-
-    if (['name', 'description', 'version'].includes(key)) {
-      // Block scalar (">-", ">", "|-", "|"): collect indented continuation lines.
-      if (afterColon === '>-' || afterColon === '>' || afterColon === '|-' || afterColon === '|') {
-        const folded = afterColon.startsWith('>');
-        const blockLines = [];
-        i++;
-        while (i < lines.length) {
-          const bl = lines[i];
-          // A non-empty line with no leading whitespace means we're back at top-level.
-          if (bl.trimStart() === bl && bl.trim() !== '') break;
-          if (bl.trim()) blockLines.push(bl.trim());
-          i++;
-        }
-        result[key] = folded ? blockLines.join(' ') : blockLines.join('\n');
-        continue;
-      }
-      // Simple / quoted scalar.
-      result[key] = afterColon.replace(/^["']|["']$/g, '');
-    } else if (key === 'environment') {
-      // Parse the nested environment mapping.
-      i++;
-      while (i < lines.length) {
-        const el = lines[i];
-        const eTrimmed = el.trimStart();
-        const eIndent = el.length - eTrimmed.length;
-        // A non-empty, non-comment line at indent 0 means we left the block.
-        if (eIndent === 0 && eTrimmed && !eTrimmed.startsWith('#')) break;
-        if (eTrimmed.startsWith('flutter:')) {
-          result.flutterConstraint = eTrimmed
-            .slice('flutter:'.length)
-            .trim()
-            .replace(/^["']|["']$/g, '');
-        }
-        i++;
-      }
-      continue;
-    }
-
-    i++;
-  }
-
-  return result;
+function die(msg) {
+  console.error(`✗  ${msg}`);
+  process.exit(1);
 }
 
-// ─── FVM helpers ────────────────────────────────────────────────────────────
+// ─── Package discovery ───────────────────────────────────────────────────────
 
-/** Returns the set of Flutter versions installed locally according to FVM. */
-function getInstalledFvmVersions() {
-  const result = spawnSync('fvm', ['list'], { encoding: 'utf8' });
-  if (result.status !== 0 || result.error) {
-    console.error('✗  `fvm list` failed — is FVM installed and on PATH?');
-    process.exit(1);
-  }
-  // Strip ANSI escape codes before parsing.
-  const plain = result.stdout.replace(/\x1b\[[0-9;]*m/g, '');
-  const versions = new Set();
-  for (const line of plain.split('\n')) {
-    // Table data rows are delimited by │; the version is the first cell.
-    if (!line.includes('│')) continue;
-    const firstCell = line.split('│')[1]?.trim() ?? '';
-    if (/^\d+\.\d+\.\d+$/.test(firstCell)) versions.add(firstCell);
-  }
-  return versions;
-}
+function discoverWebPackages() {
+  const result = spawnSync('node', [flutterMono, 'list', '--json'], {
+    encoding: 'utf8',
+    cwd: repoRoot,
+  });
 
-/**
- * Extracts the lower bound version from a Flutter SDK constraint string.
- *
- * Examples:
- *   "3.41.1"           → "3.41.1"  (exact pin is its own lower bound)
- *   ">=3.6.0 <4.0.0"  → "3.6.0"
- *   ">=3.6.0"          → "3.6.0"
- *
- * Returns null when no lower bound can be determined (absent, malformed, or
- * uses an exclusive operator — see extractLowerBound callers for the error).
- */
-function extractLowerBound(constraint) {
-  if (!constraint) return null;
-  // Exact pin — no operators.
-  if (/^\d+\.\d+\.\d+$/.test(constraint)) return constraint;
-  // Inclusive lower bound only: ">=x.y.z ..." → x.y.z.
-  // Exclusive lower bounds (">x.y.z") are intentionally not matched because
-  // x.y.z itself would not satisfy the constraint.
-  const m = constraint.match(/>=\s*(\d+\.\d+\.\d+)/);
-  return m ? m[1] : null;
-}
-
-/**
- * Resolves the path to the `flutter` binary for a given FVM-installed version.
- * Returns null if the binary cannot be found on disk.
- */
-function resolveFvmFlutterBin(version) {
-  const fvmHome = process.env.FVM_HOME ?? join(homedir(), 'fvm');
-  const candidate = join(fvmHome, 'versions', version, 'bin', 'flutter');
-  return existsSync(candidate) ? candidate : null;
-}
-
-// ─── Package discovery ──────────────────────────────────────────────────────
-
-/**
- * Returns all workspace packages that have a `web/` directory, sourced from
- * `melos list --dir-exists=web --json` so discovery matches the workspace globs
- * in melos.yaml exactly.
- */
-function discoverPackages() {
-  const result = spawnSync('melos', ['list', '--dir-exists=web', '--json'], { encoding: 'utf8', cwd: repoRoot });
   if (result.error || result.status !== 0) {
-    console.error('✗  `melos list --dir-exists=web --json` failed — is Melos installed and on PATH?');
-    if (result.error) console.error(`   ${result.error.message}`);
-    process.exit(result.status ?? 1);
+    if (result.stderr) process.stderr.write(result.stderr);
+    die('`flutter-mono list` failed — run it directly for details.');
   }
 
-  let packages;
+  let all;
   try {
-    packages = JSON.parse(result.stdout);
+    all = JSON.parse(result.stdout);
   } catch {
-    console.error('✗  Failed to parse `melos list --dir-exists=web --json` output.');
-    process.exit(1);
+    die('Failed to parse package list from flutter-mono.');
   }
 
-  return packages.map(({ location }) => ({
-    dir: location,
-    pubspecPath: join(location, 'pubspec.yaml'),
-    webPkgPath: join(location, 'web', 'package.json'),
-  }));
+  return all
+    .filter(({ location }) => existsSync(join(location, 'web', 'package.json')))
+    .map(({ name, description, version, location }) => ({
+      name,
+      description,
+      version,
+      dir: location,
+      webPkgPath: join(location, 'web', 'package.json'),
+    }));
 }
 
-// ─── Conversion helpers ─────────────────────────────────────────────────────
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
-//"tap_burst_web_component" → "tap-burst-web-component"
+// "tap_burst_web_component" → "tap-burst-web-component"
 function toNpmName(n) {
   return n.replaceAll('_', '-');
 }
 
-// ─── Main ───────────────────────────────────────────────────────────────────
+// ─── Main ────────────────────────────────────────────────────────────────────
 
-const installedFvmVersions = getInstalledFvmVersions();
-if (installedFvmVersions.size === 0) {
-  console.error('✗  No Flutter versions installed in FVM.');
-  process.exit(1);
-}
-
-const packages = discoverPackages();
+const packages = discoverWebPackages();
 
 if (packages.length === 0) {
-  console.error(
-    '✗  No packages found.\n' +
+  die(
+    'No packages found.\n' +
     '   Add a web/package.json to a Flutter package directory to opt in.',
   );
-  process.exit(1);
 }
 
 console.log(`Found ${packages.length} package(s) to build.\n`);
 
-for (const pkg of packages) {
-  const { name, description, version, flutterConstraint } = parsePubspec(pkg.pubspecPath);
+// Delegate clean + build to flutter-mono so each package gets the correct
+// FVM-managed Flutter SDK version automatically.
+const cleanResult = spawnSync(
+  'node',
+  [flutterMono, 'exec', '--dir-exists=web', '--', 'flutter', 'clean'],
+  { cwd: repoRoot, stdio: 'inherit' },
+);
 
+if (cleanResult.status !== 0) {
+  die(`Flutter clean failed (exit code ${cleanResult.status ?? '?'}).`);
+}
+
+console.log('');
+
+const buildResult = spawnSync(
+  'node',
+  [flutterMono, 'exec', '--dir-exists=web', '--', 'flutter', 'build', 'web', '--profile'],
+  { cwd: repoRoot, stdio: 'inherit' },
+);
+
+if (buildResult.status !== 0) {
+  die(`Flutter build(s) failed (exit code ${buildResult.status ?? '?'}).`);
+}
+
+// Pack each built output as an npm tarball.
+console.log('');
+for (const { name, description, version, dir, webPkgPath } of packages) {
   if (!name || !version) {
-    console.error(`✗  ${pkg.dir}: pubspec.yaml is missing required fields (name, version).`);
-    process.exit(1);
+    die(`${dir}: pubspec.yaml is missing required fields (name, version).`);
   }
 
-  console.log(`▶  Building ${name}…`);
+  const npmName = toNpmName(name);
+  console.log(`▶  Packing ${name}…`);
 
-  // Resolve the Flutter executable to use for this package.
-  let flutterCmd;
+  // Write build/web/package.json by merging pubspec fields into web/package.json.
+  const outDir = join(dir, 'build', 'web');
+  const webPkg = JSON.parse(readFileSync(webPkgPath, 'utf8'));
+  writeFileSync(
+    join(outDir, 'package.json'),
+    JSON.stringify({ ...webPkg, name: npmName, description: description ?? '', version }, null, 2) + '\n',
+    'utf8',
+  );
 
-  const targetVersion = extractLowerBound(flutterConstraint);
-
-  if (!targetVersion) {
-    console.error(`✗  ${name}: could not determine a Flutter version from constraint: "${flutterConstraint ?? '(none)'}".`);
-    if (flutterConstraint && /^>\s*\d/.test(flutterConstraint) && !/^>=/.test(flutterConstraint)) {
-      console.error('   Exclusive lower bounds (">x.y.z") are not supported. Use ">=" instead.');
-    }
-    process.exit(1);
-  }
-
-  if (!installedFvmVersions.has(targetVersion)) {
-    console.error(`✗  Flutter ${targetVersion} is not installed in FVM.`);
-    console.error(`   Run: fvm install ${targetVersion}`);
-    process.exit(1);
-  }
-
-  const bin = resolveFvmFlutterBin(targetVersion);
-  if (!bin) {
-    console.error(
-      `✗  Flutter ${targetVersion} is listed by FVM but the binary was not found on disk.`,
-    );
-    process.exit(1);
-  }
-
-  flutterCmd = bin;
-
-  // Print the actual Flutter version before building.
-  const versionResult = spawnSync(flutterCmd, ['--version'], { encoding: 'utf8' });
-  if (versionResult.error || versionResult.status !== 0) {
-    console.error(`✗  Failed to run \`flutter --version\` for ${name} (${flutterCmd}).`);
-    if (versionResult.error) console.error(`   ${versionResult.error.message}`);
-    process.exit(versionResult.status ?? 1);
-  }
-  process.stdout.write(`\x1b[32m${versionResult.stdout}\x1b[0m`);
-
-  // Run: <flutter> build web
-  const buildResult = spawnSync(flutterCmd, ['build', 'web', '--profile'], {
-    cwd: pkg.dir,
-    stdio: 'inherit',
-  });
-  if (buildResult.status !== 0) {
-    console.error(`✗  Flutter build failed for ${name} (exit code ${buildResult.status ?? '?'}).`);
-    process.exit(buildResult.status ?? 1);
-  }
-
-  // Write build/web/package.json
-  const webPkg = JSON.parse(readFileSync(pkg.webPkgPath, 'utf8'));
-  const outputPkg = {
-    ...webPkg,
-    name: toNpmName(name),
-    description: description ?? '',
-    version,
-  };
-
-  const outDir = join(pkg.dir, 'build', 'web');
-  const outPath = join(outDir, 'package.json');
-  writeFileSync(outPath, JSON.stringify(outputPkg, null, 2) + '\n', 'utf8');
-
-  // Pack the build output into a tarball.
   const packResult = spawnSync('npm', ['pack'], { cwd: outDir, stdio: 'inherit' });
   if (packResult.status !== 0) {
-    console.error(`✗  npm pack failed for ${name} (exit code ${packResult.status ?? '?'}).`);
-    process.exit(packResult.status ?? 1);
+    die(`npm pack failed for ${name} (exit code ${packResult.status ?? '?'}).`);
   }
 
   // Rename <name>-<version>.tgz → <name>.tgz (drop the version suffix).
-  const npmName = toNpmName(name);
   renameSync(
     join(outDir, `${npmName}-${version}.tgz`),
     join(outDir, `${npmName}.tgz`),

@@ -1,0 +1,40 @@
+name: flutter_multi_view_web_embedding
+
+# Glob patterns for directories to scan for pubspec.yaml files.
+packages:
+  - packages/**
+  - apps/**
+
+# Patterns to exclude from discovery (prefix-based).
+ignore: []
+
+scripts:
+  bootstrap:
+    description: Get dependencies for all packages
+    run: flutter pub get
+
+  clean:
+    description: Deep clean-up (gitignored files only; preserves .fvm and .dart_tool)
+    run: git clean -dfX -e ".fvm" -e ".dart_tool" .
+
+  format:
+    description: Format Dart code
+    run: dart format .
+
+  format.ci:
+    description: Check Dart code formatting
+    run: dart format --set-exit-if-changed .
+
+  analyze:
+    description: Analyze Dart code
+    run: dart analyze .
+
+  analyze.ci:
+    description: Analyze Dart code and fail on any issue
+    run: dart analyze --fatal-infos --fatal-warnings .
+
+  test:
+    description: Run Flutter tests
+    run: flutter test
+    filter:
+      dirExists: test

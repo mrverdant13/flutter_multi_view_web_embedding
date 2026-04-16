@@ -27,11 +27,11 @@ flutter_multi_view_web_embedding/
 
 ## Getting started
 
-**Prerequisites:** [Flutter](https://docs.flutter.dev/get-started/install) (3.27.4 — managed via [FVM](https://fvm.app)), [Melos](https://melos.codes), Node.js.
+**Prerequisites:** [Flutter](https://docs.flutter.dev/get-started/install) (managed via [FVM](https://fvm.app)), Node.js 18+.
 
 ```sh
 # 1. Install Dart/Flutter package dependencies across all packages and apps
-melos bootstrap
+node tool/flutter-mono.mjs run bootstrap
 
 # 2. Install Node dependencies for the host page
 cd apps/widgets_preview
