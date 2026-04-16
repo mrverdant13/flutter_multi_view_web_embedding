@@ -872,7 +872,7 @@ describe('main', () => {
     const mainPromise = mainFn();
     await Promise.resolve();
     const script = document.head.querySelector(
-      'script[src="/flutter-bootstrap/flutter_bootstrap.js"]',
+      'script[src="./node_modules/flutter-bootstrap/flutter_bootstrap.js"]',
     ) as HTMLScriptElement;
     script.onload!(new Event('load'));
     await mainPromise;
@@ -888,7 +888,7 @@ describe('main', () => {
 
     expect(
       document.head.querySelector(
-        'script[src="/flutter-bootstrap/flutter_bootstrap.js"]',
+        'script[src="./node_modules/flutter-bootstrap/flutter_bootstrap.js"]',
       ),
     ).not.toBeNull();
   });
@@ -905,8 +905,8 @@ describe('main', () => {
     addBtn.click();
     await vi.waitFor(() =>
       expect(vi.mocked(getFlutterApp)).toHaveBeenCalledWith(
-        '/tap-burst/',
-        '/tap-burst/',
+        '/node_modules/tap-burst-web-component/',
+        '/node_modules/tap-burst-web-component/',
       ),
     );
   });
@@ -915,7 +915,7 @@ describe('main', () => {
     const { getFlutterApp } = await import('./custom_bootstrap');
     vi.mocked(getFlutterApp).mockImplementation(
       async (basePath: string) =>
-        basePath === '/color-mixer/' ? makeColorMixerApp() : makeTapBurstApp(),
+        basePath === '/node_modules/color-mixer-web-component/' ? makeColorMixerApp() : makeTapBurstApp(),
     );
 
     await runMain();
@@ -926,8 +926,8 @@ describe('main', () => {
     addBtn.click();
     await vi.waitFor(() =>
       expect(vi.mocked(getFlutterApp)).toHaveBeenCalledWith(
-        '/color-mixer/',
-        '/color-mixer/',
+        '/node_modules/color-mixer-web-component/',
+        '/node_modules/color-mixer-web-component/',
       ),
     );
   });

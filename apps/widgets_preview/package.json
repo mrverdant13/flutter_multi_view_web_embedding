@@ -4,9 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "predev": "node scripts/build-flutter.mjs",
+    "build-flutter-packages": "node ../../tool/build-flutter-packages.mjs",
+    "predev": "node ../../tool/build-flutter-packages.mjs",
     "dev": "vite",
-    "prebuild": "node scripts/build-flutter.mjs",
+    "prebuild": "node ../../tool/build-flutter-packages.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
@@ -19,5 +20,10 @@
     "typescript": "~5.7.0",
     "vite": "^6.0.0",
     "vitest": "^4.1.0"
+  },
+  "dependencies": {
+    "color-mixer-web-component": "file:../color_mixer_web_component/build/web/color-mixer-web-component.tgz",
+    "tap-burst-web-component": "file:../tap_burst_web_component/build/web/tap-burst-web-component.tgz",
+    "flutter-bootstrap": "file:../../packages/flutter_bootstrap/build/web/flutter-bootstrap.tgz"
   }
 }
