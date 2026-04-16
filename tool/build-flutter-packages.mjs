@@ -18,7 +18,7 @@
  */
 
 import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync, readdirSync, renameSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -150,25 +150,32 @@ function resolveFvmFlutterBin(version) {
 
 // ─── Package discovery ──────────────────────────────────────────────────────
 
-/** Finds all packages that have both `pubspec.yaml` and `web/package.json`. */
+/**
+ * Returns all workspace packages that have a `web/` directory, sourced from
+ * `melos list --dir-exists=web --json` so discovery matches the workspace globs
+ * in melos.yaml exactly.
+ */
 function discoverPackages() {
-  const searchRoots = [join(repoRoot, 'packages'), join(repoRoot, 'apps')];
-  const found = [];
-
-  for (const root of searchRoots) {
-    if (!existsSync(root)) continue;
-    for (const entry of readdirSync(root, { withFileTypes: true })) {
-      if (!entry.isDirectory()) continue;
-      const dir = join(root, entry.name);
-      const pubspecPath = join(dir, 'pubspec.yaml');
-      const webPkgPath = join(dir, 'web', 'package.json');
-      if (existsSync(pubspecPath) && existsSync(webPkgPath)) {
-        found.push({ dir, pubspecPath, webPkgPath });
-      }
-    }
+  const result = spawnSync('melos', ['list', '--dir-exists=web', '--json'], { encoding: 'utf8', cwd: repoRoot });
+  if (result.error || result.status !== 0) {
+    console.error('✗  `melos list --dir-exists=web --json` failed — is Melos installed and on PATH?');
+    if (result.error) console.error(`   ${result.error.message}`);
+    process.exit(result.status ?? 1);
   }
 
-  return found;
+  let packages;
+  try {
+    packages = JSON.parse(result.stdout);
+  } catch {
+    console.error('✗  Failed to parse `melos list --dir-exists=web --json` output.');
+    process.exit(1);
+  }
+
+  return packages.map(({ location }) => ({
+    dir: location,
+    pubspecPath: join(location, 'pubspec.yaml'),
+    webPkgPath: join(location, 'web', 'package.json'),
+  }));
 }
 
 // ─── Conversion helpers ─────────────────────────────────────────────────────
