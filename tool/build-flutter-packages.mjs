@@ -236,6 +236,11 @@ for (const pkg of packages) {
 
   // Print the actual Flutter version before building.
   const versionResult = spawnSync(flutterCmd, ['--version'], { encoding: 'utf8' });
+  if (versionResult.error || versionResult.status !== 0) {
+    console.error(`✗  Failed to run \`flutter --version\` for ${name} (${flutterCmd}).`);
+    if (versionResult.error) console.error(`   ${versionResult.error.message}`);
+    process.exit(versionResult.status ?? 1);
+  }
   process.stdout.write(`\x1b[32m${versionResult.stdout}\x1b[0m`);
 
   // Run: <flutter> build web
