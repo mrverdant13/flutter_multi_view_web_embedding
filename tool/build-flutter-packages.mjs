@@ -251,10 +251,10 @@ for (const pkg of packages) {
   // Write build/web/package.json
   const webPkg = JSON.parse(readFileSync(pkg.webPkgPath, 'utf8'));
   const outputPkg = {
+    ...webPkg,
     name: toNpmName(name),
     description: description ?? '',
     version,
-    ...webPkg,
   };
 
   const outDir = join(pkg.dir, 'build', 'web');
