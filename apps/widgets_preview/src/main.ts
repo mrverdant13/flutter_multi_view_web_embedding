@@ -305,8 +305,8 @@ export async function addView(
   let viewId!: number;
   const stateReadyHandler: ((e: Event) => void) | null = onStateReady
     ? (e: Event) => {
-        onStateReady((e as CustomEvent).detail, wrapper, initialData);
-      }
+      onStateReady((e as CustomEvent).detail, wrapper, initialData);
+    }
     : null;
   if (stateReadyHandler) {
     host.addEventListener(stateReadyEventName, stateReadyHandler, { once: true });
@@ -391,11 +391,11 @@ export function wireColorMixerConfigPreview(): void {
 
 export async function main(): Promise<void> {
   wireColorMixerConfigPreview();
-  await loadScript('/flutter-bootstrap/flutter_bootstrap.js');
+  await loadScript('./node_modules/flutter-bootstrap/flutter_bootstrap.js');
 
   const widgets = [
     {
-      basePath: '/tap-burst/',
+      basePath: '/node_modules/tap-burst-web-component/',
       widgetName: 'tap_burst',
       viewsId: 'tap-burst-views',
       addId: 'tap-burst-add',
@@ -408,7 +408,7 @@ export async function main(): Promise<void> {
       },
     },
     {
-      basePath: '/color-mixer/',
+      basePath: '/node_modules/color-mixer-web-component/',
       widgetName: 'color_mixer',
       viewsId: 'color-mixer-views',
       addId: 'color-mixer-add',
