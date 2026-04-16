@@ -125,16 +125,18 @@ function getInstalledFvmVersions() {
  *   "3.41.1"           → "3.41.1"  (exact pin is its own lower bound)
  *   ">=3.6.0 <4.0.0"  → "3.6.0"
  *   ">=3.6.0"          → "3.6.0"
- *   ">3.6.0 <4.0.0"   → "3.6.0"
  *
- * Returns null when no lower bound can be determined (absent or malformed).
+ * Returns null when no lower bound can be determined (absent, malformed, or
+ * uses an exclusive operator — see extractLowerBound callers for the error).
  */
 function extractLowerBound(constraint) {
   if (!constraint) return null;
   // Exact pin — no operators.
   if (/^\d+\.\d+\.\d+$/.test(constraint)) return constraint;
-  // Range — grab the version that follows ">=" or ">".
-  const m = constraint.match(/>=?\s*(\d+\.\d+\.\d+)/);
+  // Inclusive lower bound only: ">=x.y.z ..." → x.y.z.
+  // Exclusive lower bounds (">x.y.z") are intentionally not matched because
+  // x.y.z itself would not satisfy the constraint.
+  const m = constraint.match(/>=\s*(\d+\.\d+\.\d+)/);
   return m ? m[1] : null;
 }
 
@@ -222,6 +224,9 @@ for (const pkg of packages) {
 
   if (!targetVersion) {
     console.error(`✗  ${name}: could not determine a Flutter version from constraint: "${flutterConstraint ?? '(none)'}".`);
+    if (flutterConstraint && /^>\s*\d/.test(flutterConstraint) && !/^>=/.test(flutterConstraint)) {
+      console.error('   Exclusive lower bounds (">x.y.z") are not supported. Use ">=" instead.');
+    }
     process.exit(1);
   }
 
