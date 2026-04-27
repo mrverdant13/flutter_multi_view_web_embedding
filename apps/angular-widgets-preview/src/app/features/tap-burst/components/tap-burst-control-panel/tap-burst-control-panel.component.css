@@ -1,0 +1,116 @@
+/* ── Config panel (type="config") ─────────────────────────── */
+
+.config-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.config-panel-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.57rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--accent);
+  opacity: 0.58;
+  margin-bottom: 3px;
+}
+
+.config-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.config-row span {
+  min-width: 96px;
+  text-transform: uppercase;
+  font-size: 0.6rem;
+  letter-spacing: 0.09em;
+  flex-shrink: 0;
+}
+
+/* ── Control panel (type="control") ──────────────────────── */
+
+.output-display {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  padding: 8px 12px;
+  background: var(--accent-glow);
+  border: 1px solid var(--accent-dim);
+  border-left: 2px solid var(--accent);
+  margin-top: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.73rem;
+}
+
+.output-value {
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+
+.control-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  min-height: 94px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--border-bright);
+  margin-top: 8px;
+  transition: border-left-color 220ms;
+  justify-content: center;
+}
+
+.control-panel:hover {
+  border-left-color: var(--accent);
+}
+
+.control-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.control-row span {
+  min-width: 96px;
+  text-transform: uppercase;
+  font-size: 0.6rem;
+  letter-spacing: 0.09em;
+  flex-shrink: 0;
+}
+
+/* ── Number inputs (both types) ───────────────────────────── */
+
+.config-row input[type='number'],
+.control-row input[type='number'] {
+  flex: 1;
+  padding: 5px 9px;
+  background: var(--bg);
+  border: 1px solid var(--border-bright);
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+}
+
+.config-row input[type='number']:focus,
+.control-row input[type='number']:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent-dim);
+  background: var(--surface);
+}
+
+.config-row input[type='number']:focus-visible,
+.control-row input[type='number']:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

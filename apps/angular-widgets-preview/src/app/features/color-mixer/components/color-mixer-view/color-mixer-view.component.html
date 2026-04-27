@@ -1,0 +1,13 @@
+<app-color-mixer-flutter-view [initialData]="initialData()" #flutterView />
+
+@if (store.api()) {
+  <app-color-mixer-control-panel
+    type="control"
+    [r]="store.r()"
+    [g]="store.g()"
+    [b]="store.b()"
+    (rChange)="store.setChannel('r', $event)"
+    (gChange)="store.setChannel('g', $event)"
+    (bChange)="store.setChannel('b', $event)"
+  />
+}

@@ -1,0 +1,71 @@
+@if (type() === 'control') {
+  <div class="output-display">
+    <span class="output-value">{{ hex() }}</span>
+  </div>
+}
+<div [class]="type() === 'config' ? 'config-panel' : 'control-panel'">
+  @if (type() === 'config') {
+    <span class="config-panel-label">Initial values for new views</span>
+  }
+  <div class="color-mixer-inner">
+    <div class="color-swatch-col">
+      <div class="color-swatch" [style.background]="hex()"></div>
+      @if (type() === 'config') {
+        <span class="color-swatch-hex">{{ hex() }}</span>
+      }
+    </div>
+    <div class="color-mixer-sliders">
+      <label
+        [class]="type() === 'config' ? 'config-row' : 'control-row'"
+        data-channel="r"
+      >
+        <span>R</span>
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.01"
+          aria-label="Red channel"
+          [value]="r()"
+          [attr.aria-valuetext]="rInt().toString()"
+          (input)="onSliderInput($event, 'r')"
+        />
+        <span class="color-value">{{ rInt() }}</span>
+      </label>
+      <label
+        [class]="type() === 'config' ? 'config-row' : 'control-row'"
+        data-channel="g"
+      >
+        <span>G</span>
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.01"
+          aria-label="Green channel"
+          [value]="g()"
+          [attr.aria-valuetext]="gInt().toString()"
+          (input)="onSliderInput($event, 'g')"
+        />
+        <span class="color-value">{{ gInt() }}</span>
+      </label>
+      <label
+        [class]="type() === 'config' ? 'config-row' : 'control-row'"
+        data-channel="b"
+      >
+        <span>B</span>
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.01"
+          aria-label="Blue channel"
+          [value]="b()"
+          [attr.aria-valuetext]="bInt().toString()"
+          (input)="onSliderInput($event, 'b')"
+        />
+        <span class="color-value">{{ bInt() }}</span>
+      </label>
+    </div>
+  </div>
+</div>

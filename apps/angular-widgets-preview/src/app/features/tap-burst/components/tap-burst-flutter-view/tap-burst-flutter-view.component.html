@@ -1,0 +1,23 @@
+<div class="flutter-host-wrapper">
+  <div
+    class="flutter-host"
+    data-widget="tap_burst"
+    role="application"
+    aria-label="Tap Burst widget"
+    #flutterHost
+  ></div>
+  @let s = state();
+  @if (s.status === 'loading') {
+    <div class="flutter-status-overlay" role="status" aria-live="polite">
+      <span class="flutter-status-loading">Loading...</span>
+    </div>
+  }
+  @if (s.status === 'error') {
+    <div
+      class="flutter-status-overlay flutter-status-overlay--error"
+      role="alert"
+    >
+      <span class="flutter-status-error">{{ s.message }}</span>
+    </div>
+  }
+</div>

@@ -1,0 +1,249 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  /* ── Palette ───────────────────────────────────────────── */
+  --bg: #07090f;
+  --surface: #0c0f1a;
+  --surface-raised: #111825;
+  --border: #1c2235;
+  --border-bright: #2a344f;
+  --accent: #4e80f5;
+  --accent-dim: rgba(78, 128, 245, 0.14);
+  --accent-glow: rgba(78, 128, 245, 0.06);
+  --green: #10cc8c;
+  --amber: #f5a623;
+  --red: #f04060;
+  --text: #dce5f5;
+  --text-muted: #5a6a8a;
+  --text-dim: #2a3450;
+  /* ── Misc ──────────────────────────────────────────────── */
+  --flutter-host-height: 280px;
+  /* Backward-compat aliases used by existing component CSS */
+  --surface-alt: var(--surface-raised);
+  --error: var(--red);
+}
+
+/* ── Reset ─────────────────────────────────────────────── */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 400;
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(
+      ellipse 80% 40% at 50% 0%,
+      rgba(78, 128, 245, 0.05) 0%,
+      transparent 70%
+    ),
+    radial-gradient(circle, rgba(78, 128, 245, 0.04) 1px, transparent 1px);
+  background-size:
+    auto,
+    28px 28px;
+  color: var(--text);
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+/* Scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-bright) var(--bg);
+}
+::-webkit-scrollbar {
+  width: 5px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-bright);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-dim);
+}
+
+/* ── Shared keyframes ──────────────────────────────────── */
+
+@keyframes statusPulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(0.65);
+  }
+}
+
+/* ── Dashboard: reset view-component host inside cards ──── */
+
+.widget-card-body app-tap-burst-view,
+.widget-card-body app-color-mixer-view {
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  display: block;
+}
+
+/* ── Color mixer shared UI ─────────────────────────────── */
+
+.color-mixer-inner {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.color-swatch-col {
+  width: 72px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.color-swatch {
+  flex: 1;
+  background: #000000;
+  border: 1px solid var(--border-bright);
+  transition: background 80ms;
+}
+
+.color-mixer-sliders {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  justify-content: center;
+}
+
+/* Narrow label for single-letter R/G/B — !important wins over encapsulated .config-row span */
+.color-mixer-sliders .config-row span:first-child,
+.color-mixer-sliders .control-row span:first-child {
+  min-width: 14px !important;
+}
+
+/* Constrain color-value span — same specificity battle fix */
+.color-mixer-sliders .config-row .color-value,
+.color-mixer-sliders .control-row .color-value {
+  min-width: 26px !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+}
+
+/* Channel label colors */
+[data-channel='r'] span:first-child {
+  color: #e06060;
+}
+[data-channel='g'] span:first-child {
+  color: #60c080;
+}
+[data-channel='b'] span:first-child {
+  color: #6080e0;
+}
+
+/* Custom range sliders for color mixer */
+.color-mixer-sliders input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 20px;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+}
+
+[data-channel='r'] input[type='range']::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(to right, var(--r-from, #300), var(--r-to, #f44));
+  border: 1px solid rgba(0, 0, 0, 0.4);
+}
+
+[data-channel='g'] input[type='range']::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(to right, var(--g-from, #030), var(--g-to, #4f4));
+  border: 1px solid rgba(0, 0, 0, 0.4);
+}
+
+[data-channel='b'] input[type='range']::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(to right, var(--b-from, #003), var(--b-to, #44f));
+  border: 1px solid rgba(0, 0, 0, 0.4);
+}
+
+.color-mixer-sliders input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--text);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.7);
+  margin-top: -5px;
+  cursor: grab;
+  transition: transform 100ms;
+}
+
+.color-mixer-sliders input[type='range']:active::-webkit-slider-thumb {
+  cursor: grabbing;
+  transform: scale(1.2);
+}
+
+[data-channel='r'] input[type='range']::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(to right, var(--r-from, #300), var(--r-to, #f44));
+  border: 1px solid rgba(0, 0, 0, 0.4);
+}
+
+[data-channel='g'] input[type='range']::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(to right, var(--g-from, #030), var(--g-to, #4f4));
+  border: 1px solid rgba(0, 0, 0, 0.4);
+}
+
+[data-channel='b'] input[type='range']::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(to right, var(--b-from, #003), var(--b-to, #44f));
+  border: 1px solid rgba(0, 0, 0, 0.4);
+}
+
+.color-mixer-sliders input[type='range']::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: none;
+  background: var(--text);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.7);
+  cursor: grab;
+}
+
+.color-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  min-width: 26px;
+  text-align: right;
+  flex-shrink: 0;
+}
