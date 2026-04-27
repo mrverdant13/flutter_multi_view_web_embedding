@@ -1,0 +1,105 @@
+/* ── Config panel (type="config") ─────────────────────────── */
+
+.config-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.config-panel-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.57rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--accent);
+  opacity: 0.58;
+  margin-bottom: 3px;
+}
+
+.config-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.config-row span {
+  min-width: 96px;
+  text-transform: uppercase;
+  font-size: 0.6rem;
+  letter-spacing: 0.09em;
+  flex-shrink: 0;
+}
+
+.config-row input[type='range'] {
+  flex: 1;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+/* ── Control panel (type="control") ──────────────────────── */
+
+.output-display {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  padding: 8px 12px;
+  background: var(--accent-glow);
+  border: 1px solid var(--accent-dim);
+  border-left: 2px solid var(--accent);
+  margin-top: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.73rem;
+}
+
+.output-value {
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+
+.control-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  min-height: 94px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--border-bright);
+  margin-top: 8px;
+  transition: border-left-color 220ms;
+  justify-content: center;
+}
+
+.control-panel:hover {
+  border-left-color: var(--accent);
+}
+
+.control-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.control-row span {
+  min-width: 96px;
+  text-transform: uppercase;
+  font-size: 0.6rem;
+  letter-spacing: 0.09em;
+  flex-shrink: 0;
+}
+
+/* ── Hex label below the color swatch (type="config" only) ── */
+
+.color-swatch-hex {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  text-align: center;
+  letter-spacing: 0.03em;
+}

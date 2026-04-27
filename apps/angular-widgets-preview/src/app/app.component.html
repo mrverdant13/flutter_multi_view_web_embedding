@@ -1,0 +1,40 @@
+<div class="topbar">
+  <div class="topbar-brand">
+    <span class="brand-logo">◈</span>
+    <span class="brand-name">Flutter Dashboard</span>
+    <span class="brand-divider"></span>
+    <span class="brand-sub">multi-view api · angular</span>
+  </div>
+  <div class="topbar-end">
+    @if (totalCount() > 0) {
+      <div class="widget-count">
+        <span class="widget-count-num">{{ totalCount() }}</span>
+        <span class="widget-count-label">{{
+          totalCount() === 1 ? 'widget' : 'widgets'
+        }}</span>
+      </div>
+    }
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <app-widget-catalog />
+  </aside>
+
+  <main class="canvas">
+    @if (store.cards().length === 0) {
+      <div class="empty-state">
+        <div class="empty-glyph">◈</div>
+        <p class="empty-title">No widgets yet</p>
+        <p class="empty-hint">Pick a widget from the catalog to get started</p>
+      </div>
+    } @else {
+      <div class="cards-grid">
+        @for (card of store.cards(); track card.id; let i = $index) {
+          <app-widget-card [card]="card" [cardIndex]="i + 1" />
+        }
+      </div>
+    }
+  </main>
+</div>

@@ -1,0 +1,31 @@
+@if (type() === 'control') {
+  <div class="output-display">
+    <span class="output-value">{{ particleCount() }} particles</span>
+    <span class="output-value">{{ burstDuration() }} ms</span>
+  </div>
+}
+<div [class]="type() === 'config' ? 'config-panel' : 'control-panel'">
+  @if (type() === 'config') {
+    <span class="config-panel-label">Initial values for new views</span>
+  }
+  <label [class]="type() === 'config' ? 'config-row' : 'control-row'">
+    <span>Particles</span>
+    <input
+      type="number"
+      [min]="particleCountMin"
+      [max]="particleCountMax"
+      [value]="particleCount()"
+      (input)="onParticleCountInput($event)"
+    />
+  </label>
+  <label [class]="type() === 'config' ? 'config-row' : 'control-row'">
+    <span>Duration (ms)</span>
+    <input
+      type="number"
+      [min]="burstDurationMin"
+      [max]="burstDurationMax"
+      [value]="burstDuration()"
+      (input)="onBurstDurationInput($event)"
+    />
+  </label>
+</div>

@@ -1,0 +1,19 @@
+/* ── View wrapper ─────────────────────────────────────────── */
+
+:host {
+  position: relative;
+  padding: 12px;
+  border-left: 2px solid transparent;
+  transition:
+    border-left-color 220ms,
+    background 220ms;
+}
+
+:host + :host {
+  border-top: 1px solid var(--border);
+}
+
+:host(:hover) {
+  border-left-color: var(--border-bright);
+  background: var(--accent-glow);
+}

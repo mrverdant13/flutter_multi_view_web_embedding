@@ -1,0 +1,82 @@
+<div class="catalog-header">
+  <div class="catalog-title">
+    <span class="catalog-logo">◈</span>
+    <span class="catalog-heading">Widget Catalog</span>
+  </div>
+  <div class="bootstrap-status" [attr.data-state]="store.bootstrapStatus()">
+    <span class="status-dot"></span>
+    <span class="status-label"
+      >flutter_bootstrap.js · {{ bootstrapStateLabel() }}</span
+    >
+  </div>
+</div>
+
+<div class="catalog-entries">
+  <!-- ── Tap Burst ────────────────────────────────────────── -->
+  <div class="catalog-entry">
+    <div class="entry-header">
+      <div class="entry-title">
+        <span class="entry-type-dot" style="background: #4e80f5"></span>
+        <span class="entry-name">Tap Burst</span>
+        @if (tapBurstCount() > 0) {
+          <span class="entry-active-count">{{ tapBurstCount() }}</span>
+        }
+      </div>
+      <div class="entry-ep-state" [attr.data-state]="store.tapBurstEpState()">
+        <span class="ep-state-dot"></span>
+        <span class="ep-state-label">{{ tapBurstStateLabel() }}</span>
+      </div>
+    </div>
+
+    <p class="entry-desc">Tap anywhere to spawn particle bursts</p>
+
+    <div class="entry-config">
+      <app-tap-burst-control-panel
+        type="config"
+        [particleCount]="store.tbParticleCount()"
+        [burstDuration]="store.tbBurstDuration()"
+        (particleCountChange)="store.setTbParticleCount($event)"
+        (burstDurationChange)="store.setTbBurstDuration($event)"
+      />
+    </div>
+
+    <button class="entry-add-btn" (click)="store.addTapBurst()">
+      + Add to dashboard
+    </button>
+  </div>
+
+  <!-- ── Color Mixer ──────────────────────────────────────── -->
+  <div class="catalog-entry">
+    <div class="entry-header">
+      <div class="entry-title">
+        <span class="entry-type-dot" style="background: #10cc8c"></span>
+        <span class="entry-name">Color Mixer</span>
+        @if (colorMixerCount() > 0) {
+          <span class="entry-active-count">{{ colorMixerCount() }}</span>
+        }
+      </div>
+      <div class="entry-ep-state" [attr.data-state]="store.colorMixerEpState()">
+        <span class="ep-state-dot"></span>
+        <span class="ep-state-label">{{ colorMixerStateLabel() }}</span>
+      </div>
+    </div>
+
+    <p class="entry-desc">Drag RGB sliders to blend colors in real time</p>
+
+    <div class="entry-config">
+      <app-color-mixer-control-panel
+        type="config"
+        [r]="store.cmR()"
+        [g]="store.cmG()"
+        [b]="store.cmB()"
+        (rChange)="store.setCmChannel('r', $event)"
+        (gChange)="store.setCmChannel('g', $event)"
+        (bChange)="store.setCmChannel('b', $event)"
+      />
+    </div>
+
+    <button class="entry-add-btn" (click)="store.addColorMixer()">
+      + Add to dashboard
+    </button>
+  </div>
+</div>

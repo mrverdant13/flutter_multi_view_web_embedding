@@ -1,0 +1,35 @@
+<div class="card">
+  <div class="card-header">
+    <span class="card-type-dot"></span>
+    <span class="card-type-label">{{ typeLabel() }}</span>
+    <span class="card-index">{{ indexLabel() }}</span>
+    <button
+      class="card-remove-btn"
+      (click)="remove()"
+      aria-label="Remove widget"
+    >
+      ×
+    </button>
+  </div>
+  <div class="widget-card-body">
+    @switch (card().type) {
+      @case ('tap-burst') {
+        <app-tap-burst-view
+          [initialData]="asTapBurst()!.initialData"
+          #activeView
+        />
+      }
+      @case ('color-mixer') {
+        <app-color-mixer-view
+          [initialData]="asColorMixer()!.initialData"
+          #activeView
+        />
+      }
+      @default {
+        <p class="widget-card-unknown-type">
+          Unknown card type: {{ card().type }}
+        </p>
+      }
+    }
+  </div>
+</div>

@@ -1,0 +1,53 @@
+/* ── Flutter host ─────────────────────────────────────────── */
+
+.flutter-host-wrapper {
+  position: relative;
+}
+
+.flutter-host {
+  width: 100%;
+  height: var(--flutter-host-height);
+  overflow: hidden;
+}
+
+.flutter-status-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(7, 9, 15, 0.88);
+  backdrop-filter: blur(4px);
+}
+
+.flutter-status-overlay--error {
+  background: rgba(7, 3, 5, 0.92);
+}
+
+.flutter-status-loading {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
+  opacity: 0.85;
+  animation: flutter-pulse 1.2s ease-in-out infinite;
+}
+
+.flutter-status-error {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  color: var(--red);
+  opacity: 0.9;
+}
+
+@keyframes flutter-pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}

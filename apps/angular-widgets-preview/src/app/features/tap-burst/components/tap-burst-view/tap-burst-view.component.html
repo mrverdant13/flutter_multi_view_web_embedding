@@ -1,0 +1,11 @@
+<app-tap-burst-flutter-view [initialData]="initialData()" #flutterView />
+
+@if (store.api()) {
+  <app-tap-burst-control-panel
+    type="control"
+    [particleCount]="store.particleCount()"
+    [burstDuration]="store.burstDuration()"
+    (particleCountChange)="store.setParticleCount($event)"
+    (burstDurationChange)="store.setBurstDuration($event)"
+  />
+}
